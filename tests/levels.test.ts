@@ -128,8 +128,8 @@ describe('repositories', () => {
 });
 
 describe('built-in levels', () => {
-  it('there are five, each with strokes, a spawn and a flag', () => {
-    expect(BUILT_IN_LEVELS).toHaveLength(5);
+  it('there are eight, each with strokes, a spawn and a flag', () => {
+    expect(BUILT_IN_LEVELS).toHaveLength(8);
     for (const l of BUILT_IN_LEVELS) {
       expect(l.kind).toBe('builtin');
       expect(l.strokes.length).toBeGreaterThan(0);

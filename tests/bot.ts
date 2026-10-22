@@ -92,7 +92,7 @@ export function runBot(
       }
     }
     if (sim.grounded && opts.wallLean && b.angle < -0.3 && b.angle > -3.4) tilt = -1;
-    const input: InputSample = { tilt, crouch };
+    const input: InputSample = { tilt, crouch, flip: false };
     sim.step(input);
     total++;
     if (log && total % 6 === 0) {
@@ -103,6 +103,61 @@ export function runBot(
   }
   const result = {
     won: sim.status === 'won' || reached,
+    time: sim.time,
+    deaths: sim.deaths,
+    ticks: total,
+    deathPoints,
+  };
+  sim.dispose();
+  return result;
+}
+
+export interface ScriptStep {
+  /** Advance to the next step once this returns true (checked before each tick). */
+  until: (sim: Simulation) => boolean;
+  /** Turn around on the first tick of this step. */
+  flip?: boolean;
+  /** Hold crouch (charge a jump) while this step is active. */
+  crouch?: boolean;
+}
+
+/** Scripted autopilot for levels that need turns: a list of steps plus the same air stabiliser as `runBot`. */
+export function runScript(level: Level, steps: ScriptStep[], maxSeconds = 60): BotResult {
+  const deathPoints: string[] = [];
+  const sim = new Simulation(level, {
+    onDeath: (cause) => {
+      const b = sim.skateboard.board;
+      deathPoints.push(`${cause}@${Math.round(b.position.x)},${Math.round(b.position.y)}`);
+    },
+  });
+  let index = 0;
+  let fresh = true;
+  let lastDeaths = 0;
+  let total = 0;
+  while (sim.status === 'running' && total < maxSeconds * 60) {
+    if (sim.deaths !== lastDeaths) {
+      lastDeaths = sim.deaths;
+      index = 0;
+      fresh = true;
+    }
+    let step = steps[index];
+    while (step && step.until(sim)) {
+      index++;
+      fresh = true;
+      step = steps[index];
+    }
+    const b = sim.skateboard.board;
+    let tilt: -1 | 0 | 1 = 0;
+    if (!sim.grounded && Math.abs(b.angle) < 1.6) {
+      if (b.angle > 0.15) tilt = -1;
+      else if (b.angle < -0.15) tilt = 1;
+    }
+    sim.step({ tilt, crouch: !!step?.crouch, flip: fresh && !!step?.flip });
+    fresh = false;
+    total++;
+  }
+  const result = {
+    won: sim.status === 'won',
     time: sim.time,
     deaths: sim.deaths,
     ticks: total,

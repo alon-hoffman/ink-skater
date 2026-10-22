@@ -172,12 +172,94 @@ function inkMaster(): Level {
   });
 }
 
+/** Dead-end wall rising from the floor at (x, floorY); `side` 1 curves up on the +x side, -1 on the -x side. */
+function deadEnd(args: { x: number; floorY: number; side: 1 | -1; height: number }) {
+  const { x, floorY, side, height } = args;
+  const R = 100;
+  const cx = x;
+  const cy = floorY - R;
+  return join(
+    side === 1 ? arc(cx, cy, R, Math.PI / 2, 0) : arc(cx, cy, R, Math.PI / 2, Math.PI),
+    line(x + side * R, cy, x + side * R, cy - height),
+  );
+}
+
+/** Level 6: the flag is behind you. Build speed the other way, turn around and clear the gap. */
+function aboutFace(): Level {
+  const home = join(line(-400, 0, 1300, 0), deadEnd({ x: 1300, floorY: 0, side: 1, height: 260 }));
+  const far = line(-1300, 0, -600, 0);
+  return builtInLevel({
+    id: 'builtin-6',
+    name: 'About Face',
+    difficulty: 'Medium',
+    strokes: [stroke('l6-home', home), stroke('l6-far', far)],
+    spawn: pt(60, spawnHeight(0)),
+    flag: pt(-1150, 0),
+  });
+}
+
+/** Level 7: drop down two ledges; each one dead-ends, so you have to turn around to reach the next drop. */
+function switchback(): Level {
+  const top = line(-420, 0, 1500, 0);
+  const middle = join(
+    line(300, 300, 1900, 300),
+    deadEnd({ x: 1900, floorY: 300, side: 1, height: 260 }),
+  );
+  const bottom = join(
+    deadEnd({ x: -500, floorY: 600, side: -1, height: 260 }).reverse(),
+    line(-500, 600, 1100, 600),
+  );
+  return builtInLevel({
+    id: 'builtin-7',
+    name: 'Switchback',
+    difficulty: 'Hard',
+    strokes: [stroke('l7-top', top), stroke('l7-middle', middle), stroke('l7-bottom', bottom)],
+    spawn: pt(60, spawnHeight(0)),
+    flag: pt(900, 600),
+  });
+}
+
+/** Level 8: a four-tier zigzag with a gap to clear on the way back, and a flag that needs one last turn. */
+function zigzag(): Level {
+  const a = line(-420, 0, 1300, 0);
+  const b = join(
+    line(100, 260, 1700, 260),
+    deadEnd({ x: 1700, floorY: 260, side: 1, height: 240 }),
+  );
+  const c1 = join(
+    deadEnd({ x: -700, floorY: 520, side: -1, height: 240 }).reverse(),
+    line(-700, 520, 300, 520),
+  );
+  const c2 = line(500, 520, 900, 520);
+  const d = join(
+    line(500, 780, 2300, 780),
+    deadEnd({ x: 2300, floorY: 780, side: 1, height: 240 }),
+  );
+  return builtInLevel({
+    id: 'builtin-8',
+    name: 'Zigzag',
+    difficulty: 'Expert',
+    strokes: [
+      stroke('l8-a', a),
+      stroke('l8-b', b),
+      stroke('l8-c1', c1),
+      stroke('l8-c2', c2),
+      stroke('l8-d', d),
+    ],
+    spawn: pt(60, spawnHeight(0)),
+    flag: pt(700, 780),
+  });
+}
+
 export const BUILT_IN_LEVELS: readonly Level[] = [
   firstRide(),
   firstJump(),
   airTime(),
   upsideDown(),
   inkMaster(),
+  aboutFace(),
+  switchback(),
+  zigzag(),
 ];
 
 export function getBuiltInLevel(id: string): Level | undefined {
