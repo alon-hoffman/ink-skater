@@ -9,6 +9,8 @@ export function MainMenu({ go }: { go: (route: Route) => void }): React.JSX.Elem
     audio.click();
     go(route);
   };
+  const canFullscreen =
+    document.fullscreenEnabled && !window.matchMedia('(display-mode: fullscreen)').matches;
   return (
     <main className="screen menu-screen">
       <div className="title-block">
@@ -39,6 +41,17 @@ export function MainMenu({ go }: { go: (route: Route) => void }): React.JSX.Elem
           My Levels
         </button>
       </nav>
+      {canFullscreen && (
+        <button
+          className="btn small corner-left"
+          onClick={() => {
+            if (document.fullscreenElement) void document.exitFullscreen();
+            else void document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+          }}
+        >
+          ⛶ Fullscreen
+        </button>
+      )}
       <button
         className="btn small corner"
         onClick={() => {

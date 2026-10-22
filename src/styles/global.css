@@ -138,6 +138,12 @@ button {
   bottom: 1rem;
 }
 
+.btn.corner-left {
+  position: fixed;
+  left: 1rem;
+  bottom: 1rem;
+}
+
 .icon-btn {
   width: 2.5rem;
   height: 2.5rem;
