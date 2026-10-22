@@ -8,7 +8,18 @@ export interface InputCallbacks {
   onGesture?: () => void;
 }
 
-const GAME_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD', 'Space']);
+const GAME_KEYS = new Set([
+  'ArrowLeft',
+  'ArrowRight',
+  'ArrowDown',
+  'KeyA',
+  'KeyD',
+  'KeyS',
+  'Space',
+]);
+
+/** A touch drag counts as a flip swipe past this horizontal distance (px) when mostly horizontal. */
+const SWIPE_MIN_DISTANCE = 50;
 
 /** DOM binding around the pure `InputState`: keyboard, multi-touch zones, focus loss. */
 export class InputController {
@@ -56,6 +67,7 @@ export class InputController {
 
   /** Bind a touch zone element; each pointer is tracked by id so fingers stay independent. */
   attachZone(el: HTMLElement, zone: Zone): void {
+    const starts = new Map<number, { x: number; y: number }>();
     const down = (e: PointerEvent): void => {
       e.preventDefault();
       this.callbacks.onGesture?.();
@@ -64,20 +76,36 @@ export class InputController {
       } catch {
         /* capture can fail for synthetic pointers; tracking by id still works */
       }
-      if (!this.locked) this.state.pointerDown(e.pointerId, zone);
+      if (this.locked) return;
+      starts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      this.state.pointerDown(e.pointerId, zone);
+    };
+    const move = (e: PointerEvent): void => {
+      const start = starts.get(e.pointerId);
+      if (!start || this.locked) return;
+      const dx = e.clientX - start.x;
+      const dy = e.clientY - start.y;
+      if (Math.abs(dx) < SWIPE_MIN_DISTANCE || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      // A swipe flips once and releases this finger so it stops tilting.
+      starts.delete(e.pointerId);
+      this.state.pointerUp(e.pointerId);
+      this.state.requestFlip();
     };
     const up = (e: PointerEvent): void => {
       e.preventDefault();
+      starts.delete(e.pointerId);
       this.state.pointerUp(e.pointerId);
     };
     const block = (e: Event): void => e.preventDefault();
     el.addEventListener('pointerdown', down);
+    el.addEventListener('pointermove', move);
     el.addEventListener('pointerup', up);
     el.addEventListener('pointercancel', up);
     el.addEventListener('lostpointercapture', up);
     el.addEventListener('contextmenu', block);
     this.cleanups.push(() => {
       el.removeEventListener('pointerdown', down);
+      el.removeEventListener('pointermove', move);
       el.removeEventListener('pointerup', up);
       el.removeEventListener('pointercancel', up);
       el.removeEventListener('lostpointercapture', up);
@@ -90,7 +118,7 @@ export class InputController {
   }
 
   sample(): InputSample {
-    return this.locked ? { tilt: 0, crouch: false } : this.state.sample();
+    return this.locked ? { tilt: 0, crouch: false, flip: false } : this.state.sample();
   }
 
   detach(): void {

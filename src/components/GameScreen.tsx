@@ -137,7 +137,10 @@ export function GameScreen(props: GameScreenProps): React.JSX.Element {
           </button>
         </div>
       </header>
-      <p className="hud-hint">Hold both sides (or Space) to charge a jump · release to launch</p>
+      <p className="hud-hint">
+        Hold both sides (or ↓) to charge a jump · release to launch · swipe (or Space) to turn
+        around
+      </p>
 
       {paused && !completion && !portrait && (
         <PauseMenu mode={mode} onResume={resume} onRestart={restart} onExit={props.onExit} />

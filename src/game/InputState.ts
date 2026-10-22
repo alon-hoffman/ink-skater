@@ -4,6 +4,8 @@ export interface InputSample {
   /** -1 = counterclockwise (left), 1 = clockwise (right), 0 = none. */
   tilt: -1 | 0 | 1;
   crouch: boolean;
+  /** True for the single sample after a flip was requested (Space / swipe). */
+  flip: boolean;
 }
 
 /**
@@ -13,19 +15,26 @@ export interface InputSample {
 export class InputState {
   private readonly leftKeys = new Set<string>();
   private readonly rightKeys = new Set<string>();
-  private space = false;
+  private down = false;
+  private flipRequested = false;
   private readonly pointers = new Map<number, Zone>();
 
   keyDown(code: string): void {
     if (code === 'ArrowLeft' || code === 'KeyA') this.leftKeys.add(code);
     else if (code === 'ArrowRight' || code === 'KeyD') this.rightKeys.add(code);
-    else if (code === 'Space') this.space = true;
+    else if (code === 'ArrowDown' || code === 'KeyS') this.down = true;
+    else if (code === 'Space') this.flipRequested = true;
   }
 
   keyUp(code: string): void {
     this.leftKeys.delete(code);
     this.rightKeys.delete(code);
-    if (code === 'Space') this.space = false;
+    if (code === 'ArrowDown' || code === 'KeyS') this.down = false;
+  }
+
+  /** Request a direction flip, applied on the next sample. */
+  requestFlip(): void {
+    this.flipRequested = true;
   }
 
   pointerDown(id: number, zone: Zone): void {
@@ -39,7 +48,8 @@ export class InputState {
   reset(): void {
     this.leftKeys.clear();
     this.rightKeys.clear();
-    this.space = false;
+    this.down = false;
+    this.flipRequested = false;
     this.pointers.clear();
   }
 
@@ -53,9 +63,11 @@ export class InputState {
 
   sample(): InputSample {
     const { left, right } = this;
-    // Space takes precedence: it alone defines crouch, arrows only tilt.
-    const crouch = this.space || (left && right);
+    // Down defines crouch on its own; holding both tilt inputs also crouches.
+    const crouch = this.down || (left && right);
     const tilt = left && right ? 0 : left ? -1 : right ? 1 : 0;
-    return { tilt, crouch };
+    const flip = this.flipRequested;
+    this.flipRequested = false;
+    return { tilt, crouch, flip };
   }
 }

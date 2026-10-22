@@ -49,7 +49,9 @@ export class Simulation {
   time = 0;
   deaths = 0;
   ticks = 0;
-  lastInput: InputSample = { tilt: 0, crouch: false };
+  lastInput: InputSample = { tilt: 0, crouch: false, flip: false };
+  /** Current travel direction; starts at the level's spawn direction and flips on request. */
+  private travelDir: 1 | -1 = 1;
 
   private readonly headSensor: Matter.Body;
   private readonly flagSensor: Matter.Body;
@@ -155,13 +157,14 @@ export class Simulation {
     this.victoryFired = false;
     this.immunityTicks = PHYSICS.spawnImmunityTicks;
     this.wasAirborne = true;
-    this.lastInput = { tilt: 0, crouch: false };
+    this.lastInput = { tilt: 0, crouch: false, flip: false };
+    this.travelDir = level.spawnDirection;
     this.currRender = this.skateboard.transforms();
     this.prevRender = this.currRender;
   }
 
   get facing(): 1 | -1 {
-    return this.level.spawnDirection;
+    return this.travelDir;
   }
 
   /** Speed of the assembly in px/s. */
@@ -211,6 +214,7 @@ export class Simulation {
   step(input: InputSample): void {
     if (this.status !== 'running') return;
     this.lastInput = input;
+    if (input.flip) this.travelDir = this.travelDir === 1 ? -1 : 1;
     const sb = this.skateboard;
 
     this.terrain.activateAround(sb.board.position.x);
