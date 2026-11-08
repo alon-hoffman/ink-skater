@@ -47,9 +47,15 @@ export function catmullRom(points: readonly Vec2[], perSegment: number): Vec2[] 
   for (let i = 0; i < n - 1; i++) {
     const p1 = points[i];
     const p2 = points[i + 1];
-    const p0 = points[Math.max(0, i - 1)];
-    const p3 = points[Math.min(n - 1, i + 2)];
-    if (!p0 || !p1 || !p2 || !p3) continue;
+    if (!p1 || !p2) continue;
+    // End spans extrapolate the neighbouring curvature (3a - 3b + c) instead of duplicating the end
+    // point, which would make the first/last span ripple (curvature flips) on a smooth polygon.
+    const q0 = points[i - 1];
+    const q3 = points[i + 2];
+    const pn = points[i + 2] ?? p2;
+    const p0 = q0 ?? { x: 3 * p1.x - 3 * p2.x + pn.x, y: 3 * p1.y - 3 * p2.y + pn.y };
+    const pb = points[i - 1] ?? p1;
+    const p3 = q3 ?? { x: 3 * p2.x - 3 * p1.x + pb.x, y: 3 * p2.y - 3 * p1.y + pb.y };
     for (let s = 0; s < perSegment; s++) {
       const t = s / perSegment;
       const t2 = t * t;

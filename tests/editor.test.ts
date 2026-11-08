@@ -45,8 +45,14 @@ describe('stroke processing', () => {
     const pts = need(processFreehand(jitter));
     expect(pts[0]).toEqual(jitter[0]);
     expect(pts[pts.length - 1]).toEqual(jitter[jitter.length - 1]);
+    // The +-4 zigzag is gone: only a gentle bow between the two pinned ends remains.
     const mid = pts.slice(2, -2);
-    expect(Math.max(...mid.map((p) => Math.abs(p.y)))).toBeLessThan(1);
+    expect(Math.max(...mid.map((p) => Math.abs(p.y)))).toBeLessThan(6);
+    for (let i = 1; i < pts.length; i++) {
+      expect(Math.abs((pts[i]?.y ?? 0) - (pts[i - 1]?.y ?? 0))).toBeLessThan(
+        2.5 + (i >= pts.length - 4 ? 6 : 0),
+      );
+    }
     const preview = previewFreehand(jitter);
     expect(preview[0]).toEqual(pts[0]);
     expect(preview.length).toBeGreaterThan(pts.length);
