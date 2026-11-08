@@ -1,4 +1,5 @@
 import { AudioManager } from '../game/AudioManager';
+import { CloudLevels } from '../levels/cloudLevels';
 import { MemoryStorage, createLocalRepositories } from '../levels/localLevelRepository';
 import type { StorageLike } from '../levels/localLevelRepository';
 
@@ -14,5 +15,7 @@ function pickStorage(): StorageLike {
   }
 }
 
-export const repositories = createLocalRepositories(pickStorage());
+const storage = pickStorage();
+export const repositories = createLocalRepositories(storage);
+export const cloud = new CloudLevels(storage);
 export const audio = new AudioManager();

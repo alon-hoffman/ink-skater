@@ -1,15 +1,21 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { audio } from '../app/services';
 import { arrowNavigate } from '../app/hooks';
 import type { Route } from '../app/navigation';
+import { hasSeenTutorial } from './Tutorial';
 
 export function MainMenu({ go }: { go: (route: Route) => void }): React.JSX.Element {
   const [muted, setMuted] = useState(audio.isMuted);
+  const [autoTutorial] = useState(() => !hasSeenTutorial());
   const enter = (route: Route): void => {
     audio.unlock();
     audio.click();
     go(route);
   };
+  // First launch only: open the tutorial once. It records the flag when it closes.
+  useEffect(() => {
+    if (autoTutorial) go({ name: 'tutorial' });
+  }, [autoTutorial, go]);
   const canFullscreen =
     document.fullscreenEnabled && !window.matchMedia('(display-mode: fullscreen)').matches;
   return (
@@ -34,6 +40,9 @@ export function MainMenu({ go }: { go: (route: Route) => void }): React.JSX.Elem
       <nav className="menu-buttons" aria-label="Main menu" onKeyDown={(e) => arrowNavigate(e)}>
         <button className="btn big primary" onClick={() => enter({ name: 'levels' })} autoFocus>
           Play
+        </button>
+        <button className="btn big" onClick={() => enter({ name: 'tutorial' })}>
+          How to play
         </button>
         <button
           className="btn big"

@@ -3,6 +3,7 @@ import { GameScreen } from '../components/GameScreen';
 import { LevelSelect } from '../components/LevelSelect';
 import { MainMenu } from '../components/MainMenu';
 import { MyLevels } from '../components/MyLevels';
+import { Tutorial } from '../components/Tutorial';
 import { Editor } from '../editor/Editor';
 import { BUILT_IN_LEVELS, getBuiltInLevel } from '../levels/builtInLevels';
 import type { Level } from '../levels/levelTypes';
@@ -21,6 +22,8 @@ export function App(): React.JSX.Element {
       return <LevelSelect go={setRoute} />;
     case 'myLevels':
       return <MyLevels go={setRoute} />;
+    case 'tutorial':
+      return <Tutorial go={setRoute} />;
     case 'editor':
       return (
         <Editor

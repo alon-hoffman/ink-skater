@@ -2,6 +2,7 @@ export type Route =
   | { name: 'menu' }
   | { name: 'levels' }
   | { name: 'myLevels' }
+  | { name: 'tutorial' }
   | { name: 'play'; levelId: string; from: 'levels' | 'myLevels' }
   | { name: 'editor'; levelId: string | null; fresh: boolean };
 
