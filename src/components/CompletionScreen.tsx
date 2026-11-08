@@ -1,3 +1,4 @@
+import { useDialogFocus } from '../app/hooks';
 import { formatTime } from '../game/Game';
 
 export type CompletionInfo =
@@ -15,8 +16,9 @@ interface CompletionScreenProps {
 
 export function CompletionScreen(props: CompletionScreenProps): React.JSX.Element {
   const { levelName, info, validated, onRestart, onNext, onExit } = props;
+  const ref = useDialogFocus<HTMLDivElement>(onExit);
   return (
-    <div className="overlay" role="dialog" aria-label="Level complete">
+    <div className="overlay" role="dialog" aria-modal="true" aria-label="Level complete" ref={ref}>
       <div className="panel complete">
         <div className="flag-doodle" aria-hidden="true" />
         <h2>{info.kind === 'playtest' ? 'Playtest cleared!' : 'You made it!'}</h2>
@@ -42,11 +44,11 @@ export function CompletionScreen(props: CompletionScreenProps): React.JSX.Elemen
                 Restart
               </button>
               {onNext && (
-                <button className="btn primary" onClick={onNext}>
+                <button className="btn primary" onClick={onNext} autoFocus>
                   Next Level
                 </button>
               )}
-              <button className="btn" onClick={onExit}>
+              <button className="btn" onClick={onExit} autoFocus={!onNext}>
                 Return to Menu
               </button>
             </>
@@ -55,7 +57,7 @@ export function CompletionScreen(props: CompletionScreenProps): React.JSX.Elemen
               <button className="btn" onClick={onRestart}>
                 Retry
               </button>
-              <button className="btn primary" onClick={onExit}>
+              <button className="btn primary" onClick={onExit} autoFocus>
                 Back to Editor
               </button>
             </>

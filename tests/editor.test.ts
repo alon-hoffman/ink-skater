@@ -8,7 +8,12 @@ import {
   setSpawn,
 } from '../src/editor/editorCommands';
 import { EditorSession } from '../src/editor/EditorSession';
-import { createStroke, findStrokeAt, processFreehand } from '../src/editor/strokeProcessing';
+import {
+  createStroke,
+  findStrokeAt,
+  previewFreehand,
+  processFreehand,
+} from '../src/editor/strokeProcessing';
 import { isValidated, newCustomLevel } from '../src/levels/levelValidation';
 
 const raw = (n: number, dy = 0) =>
@@ -30,6 +35,21 @@ describe('stroke processing', () => {
     expect(pts.length).toBeGreaterThan(10);
     expect(pts.length).toBeLessThan(120);
     expect(pts[0]?.x).toBe(0);
+  });
+
+  it('smooths jitter while pinning endpoints', () => {
+    const jitter = Array.from({ length: 150 }, (_, i) => ({
+      x: i * 3,
+      y: (i % 2 === 0 ? 1 : -1) * 4,
+    }));
+    const pts = need(processFreehand(jitter));
+    expect(pts[0]).toEqual(jitter[0]);
+    expect(pts[pts.length - 1]).toEqual(jitter[jitter.length - 1]);
+    const mid = pts.slice(2, -2);
+    expect(Math.max(...mid.map((p) => Math.abs(p.y)))).toBeLessThan(1);
+    const preview = previewFreehand(jitter);
+    expect(preview[0]).toEqual(pts[0]);
+    expect(preview.length).toBeGreaterThan(pts.length);
   });
 
   it('discards taps', () => {

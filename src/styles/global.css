@@ -842,3 +842,29 @@ button {
     transition: none;
   }
 }
+
+/* ---------- keyboard focus ---------- */
+:focus-visible {
+  outline: 3px dashed var(--blue);
+  outline-offset: 3px;
+}
+
+.text-input:focus-visible {
+  outline-offset: 1px;
+}
+
+.level-card:focus-visible,
+.tool:focus-visible {
+  outline-style: solid;
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.85);
+  position: relative;
+  z-index: 1;
+}
+
+.panel:focus {
+  outline: none;
+}
+
+.keys-hint {
+  margin-top: 0.4rem;
+}

@@ -9,7 +9,7 @@ import {
   setSpawnDirection,
 } from './editorCommands';
 import type { EditorSession } from './EditorSession';
-import { createStroke, findStrokeAt } from './strokeProcessing';
+import { createStroke, findStrokeAt, previewFreehand } from './strokeProcessing';
 
 export type EditorTool = 'draw' | 'select' | 'move' | 'pan' | 'spawn' | 'flag';
 
@@ -75,6 +75,8 @@ export class EditorController {
     const onKeyDown = (e: KeyboardEvent): void => {
       if (isTyping(e.target)) return;
       if (e.code === 'Space') {
+        // Let Space activate a focused toolbar button instead of acting as hold-to-pan.
+        if (isButtonLike(e.target)) return;
         this.spaceDown = true;
         e.preventDefault();
         return;
@@ -187,7 +189,7 @@ export class EditorController {
     this.canvas.render({
       content,
       selectedId: this.session.selectedId,
-      drawing: g.kind === 'draw' ? g.points : null,
+      drawing: g.kind === 'draw' ? previewFreehand(g.points) : null,
       moveOffset: g.kind === 'move' ? g.offset : null,
     });
   }
@@ -365,6 +367,10 @@ export class EditorController {
     this.canvas.zoomAt(e.clientX - rect.left, e.clientY - rect.top, factor);
     this.requestRender();
   };
+}
+
+function isButtonLike(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && (target.tagName === 'BUTTON' || target.tagName === 'A');
 }
 
 function isTyping(target: EventTarget | null): boolean {

@@ -267,13 +267,10 @@ export class Simulation {
   private applyJump(speed: number, charge01: number): void {
     const sb = this.skateboard;
     const surface = this.contacts.groundNormal ?? { x: 0, y: -1 };
-    const a = sb.board.angle;
-    // Board "up": perpendicular to the deck, pointing from the deck toward the skater.
-    const upX = Math.sin(a);
-    const upY = -Math.cos(a);
-    const w = PHYSICS.jump.normalWeight;
-    let dx = surface.x * w + upX * (1 - w);
-    let dy = surface.y * w + upY * (1 - w);
+    // Blend world-up with the surface normal so ramps launch up/forward, never backward.
+    const w = PHYSICS.jump.worldUpWeight;
+    let dx = surface.x * (1 - w);
+    let dy = surface.y * (1 - w) - w;
     const len = Math.hypot(dx, dy) || 1;
     dx /= len;
     dy /= len;
@@ -305,7 +302,6 @@ export class Simulation {
     if (grounded) {
       this.applyPropulsion();
       sb.scaleVelocity(1 - PHYSICS.rollingResistance);
-      this.applyGrip();
     }
 
     const v = sb.velocity();
@@ -339,22 +335,6 @@ export class Simulation {
     if (!this.contacts.wheel(wheel).grounded) return undefined;
     const body = tilt > 0 ? this.skateboard.wheelFront : this.skateboard.wheelRear;
     return { x: body.position.x, y: body.position.y };
-  }
-
-  /**
-   * Grip on steep or overhead surfaces: while moving fast, press the assembly into the surface so a
-   * quick rider can follow walls and ceilings (a rider has real weight shift and traction we do not simulate).
-   */
-  private applyGrip(): void {
-    const normal = this.contacts.groundNormal;
-    if (!normal || normal.y < PHYSICS.grip.maxFloorNormalY) return;
-    const speedFactor = Math.min(
-      1,
-      Math.max(0, (this.speed - PHYSICS.grip.minSpeed) / PHYSICS.grip.rampSpeed),
-    );
-    if (speedFactor <= 0) return;
-    const dv = PHYSICS.grip.acceleration * speedFactor * DT * DT;
-    this.skateboard.addVelocity({ x: -normal.x * dv, y: -normal.y * dv });
   }
 
   private applyPropulsion(): void {

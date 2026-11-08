@@ -190,7 +190,6 @@ const PLANS: PlannedJump[][] = [
     { at: 1680, charge: 0.45 },
     { at: 3880, charge: 0.4 },
   ],
-  [],
   [
     { at: 1790, charge: 0.4 },
     { at: 3290, charge: 0.5 },

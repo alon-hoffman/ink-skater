@@ -138,8 +138,8 @@ export function GameScreen(props: GameScreenProps): React.JSX.Element {
         </div>
       </header>
       <p className="hud-hint">
-        Hold both sides (or ↓) to charge a jump · release to launch · swipe (or Space) to turn
-        around
+        Hold Space (or both sides) to charge a jump · release to launch · press Z (or swipe) to
+        turn around
       </p>
 
       {paused && !completion && !portrait && (

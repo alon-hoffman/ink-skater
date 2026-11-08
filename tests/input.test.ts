@@ -83,10 +83,10 @@ describe('InputState', () => {
 });
 
 describe('InputState flip', () => {
-  it('space requests exactly one flip and does not crouch', () => {
+  it('Z requests exactly one flip and does not crouch', () => {
     const s = new InputState();
-    s.keyDown('Space');
-    s.keyUp('Space');
+    s.keyDown('KeyZ');
+    s.keyUp('KeyZ');
     expect(s.sample()).toEqual({ tilt: 0, crouch: false, flip: true });
     expect(s.sample().flip).toBe(false);
   });
@@ -96,5 +96,34 @@ describe('InputState flip', () => {
     s.requestFlip();
     expect(s.sample().flip).toBe(true);
     expect(s.sample().flip).toBe(false);
+  });
+});
+
+describe('InputState Space jump', () => {
+  it('Space does not flip', () => {
+    const s = new InputState();
+    s.keyDown('Space');
+    expect(s.sample().flip).toBe(false);
+  });
+
+  it('holding Space charges and releasing launches exactly one jump', () => {
+    const s = new InputState();
+    const jc = new JumpController();
+    s.keyDown('Space');
+    expect(s.sample()).toEqual({ tilt: 0, crouch: true, flip: false });
+    for (let i = 0; i < 15; i++) expect(jc.update({ ...s.sample(), grounded: true, dt })).toBeNull();
+    s.keyUp('Space');
+    expect(jc.update({ ...s.sample(), grounded: true, dt })).not.toBeNull();
+    expect(jc.update({ ...s.sample(), grounded: true, dt })).toBeNull();
+  });
+
+  it('Space and Down together keep crouching until both are released', () => {
+    const s = new InputState();
+    s.keyDown('Space');
+    s.keyDown('ArrowDown');
+    s.keyUp('Space');
+    expect(s.sample().crouch).toBe(true);
+    s.keyUp('ArrowDown');
+    expect(s.sample().crouch).toBe(false);
   });
 });

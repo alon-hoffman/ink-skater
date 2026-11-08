@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { arrowNavigate, useDialogFocus, useEscape } from '../app/hooks';
 import type { Route } from '../app/navigation';
 import { audio, repositories } from '../app/services';
 import { newId } from '../editor/strokeProcessing';
@@ -21,6 +22,9 @@ export function MyLevels({ go }: { go: (route: Route) => void }): React.JSX.Elem
   const [entries, setEntries] = useState<Entry[] | null>(null);
   const [dialog, setDialog] = useState<Dialog>(null);
   const [error, setError] = useState<string | null>(null);
+  useEscape(() => {
+    if (!dialog) go({ name: 'menu' });
+  });
 
   const refresh = useCallback(async () => {
     const [saved, drafts, bests] = await Promise.all([
@@ -117,7 +121,7 @@ export function MyLevels({ go }: { go: (route: Route) => void }): React.JSX.Elem
                   <span className="chip faint">{level.strokes.length} strokes</span>
                 </span>
               </div>
-              <div className="my-level-actions">
+              <div className="my-level-actions" onKeyDown={(e) => arrowNavigate(e)}>
                 <button
                   className="btn small primary"
                   disabled={draftOnly}
@@ -173,32 +177,44 @@ export function MyLevels({ go }: { go: (route: Route) => void }): React.JSX.Elem
         />
       )}
       {dialog?.kind === 'delete' && (
-        <div className="overlay" role="dialog" aria-label="Confirm delete">
-          <div className="panel">
-            <h2>Delete level?</h2>
-            <p>“{dialog.level.name}” will be removed from this device. This can’t be undone.</p>
-            <div className="row">
-              <button className="btn" onClick={() => setDialog(null)} autoFocus>
-                Keep it
-              </button>
-              <button
-                className="btn danger"
-                onClick={() => {
-                  const id = dialog.level.id;
-                  setDialog(null);
-                  void run(async () => {
-                    await repositories.levels.remove(id);
-                    await repositories.drafts.remove(id);
-                  });
-                }}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeleteDialog
+          level={dialog.level}
+          onCancel={() => setDialog(null)}
+          onConfirm={() => {
+            const id = dialog.level.id;
+            setDialog(null);
+            void run(async () => {
+              await repositories.levels.remove(id);
+              await repositories.drafts.remove(id);
+            });
+          }}
+        />
       )}
     </main>
+  );
+}
+
+function DeleteDialog(props: {
+  level: Level;
+  onCancel: () => void;
+  onConfirm: () => void;
+}): React.JSX.Element {
+  const ref = useDialogFocus<HTMLDivElement>(props.onCancel);
+  return (
+    <div className="overlay" role="dialog" aria-modal="true" aria-label="Confirm delete" ref={ref}>
+      <div className="panel">
+        <h2>Delete level?</h2>
+        <p>“{props.level.name}” will be removed from this device. This can’t be undone.</p>
+        <div className="row">
+          <button className="btn" onClick={props.onCancel} autoFocus>
+            Keep it
+          </button>
+          <button className="btn danger" onClick={props.onConfirm}>
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -208,8 +224,9 @@ function RenameDialog(props: {
   onSave: (name: string) => void;
 }): React.JSX.Element {
   const [name, setName] = useState(props.level.name);
+  const ref = useDialogFocus<HTMLDivElement>(props.onCancel);
   return (
-    <div className="overlay" role="dialog" aria-label="Rename level">
+    <div className="overlay" role="dialog" aria-modal="true" aria-label="Rename level" ref={ref}>
       <form
         className="panel"
         onSubmit={(e) => {

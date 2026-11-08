@@ -42,6 +42,24 @@ function smooth(points: readonly Vec2[], passes: number): Vec2[] {
   return cur;
 }
 
+/** Spacing of the fine intermediate resample that smoothing runs on. */
+const SMOOTH_SPACING = 4;
+const SMOOTH_PASSES = 8;
+
+/**
+ * Resample at fine even spacing (so jitter is filtered by distance, not by pointer sample rate),
+ * then low-pass with endpoints pinned. Pure; safe to call on every pointer move for previews.
+ */
+export function smoothEvenly(points: readonly Vec2[]): Vec2[] {
+  if (points.length < 3) return points.map((p) => ({ ...p }));
+  return smooth(resample(points, SMOOTH_SPACING), SMOOTH_PASSES);
+}
+
+/** Smoothed polyline for the live preview; same filter as the committed stroke, without the tap check. */
+export function previewFreehand(raw: readonly Vec2[]): Vec2[] {
+  return smoothEvenly(dropDuplicates(raw, 1.5));
+}
+
 /**
  * Turn raw pointer samples into stroke control points: de-duplicated, smoothed and resampled
  * to an even spacing so the generated physics geometry stays small and rideable.
@@ -50,7 +68,7 @@ function smooth(points: readonly Vec2[], passes: number): Vec2[] {
 export function processFreehand(raw: readonly Vec2[]): Vec2[] | null {
   const cleaned = dropDuplicates(raw, 1.5);
   if (cleaned.length < 2 || pathLength(cleaned) < MIN_STROKE_LENGTH) return null;
-  const smoothed = smooth(cleaned, 3);
+  const smoothed = smoothEvenly(cleaned);
   let spacing = CONTROL_SPACING;
   let points = resample(smoothed, spacing);
   while (points.length > MAX_POINTS_PER_STROKE) {

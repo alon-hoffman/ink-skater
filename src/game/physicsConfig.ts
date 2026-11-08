@@ -43,17 +43,15 @@ export const PHYSICS = {
     maxChargeSeconds: 0.7,
     minSpeed: 360,
     maxSpeed: 780,
-    /** Weight of the contact normal against the board's up vector. */
-    normalWeight: 0.65,
+    /** Weight of world-up against the contact normal in the jump direction (1 - this goes to the normal). */
+    worldUpWeight: 0.7,
     cooldownSeconds: 0.15,
   },
   /**
    * Grounded alignment assist (only while no tilt is held): eases the deck toward the surface normal so
-   * the board follows curves, walls and ceilings instead of peeling off one wheel. Zero in the air.
+   * the board follows curves and walls instead of peeling off one wheel. Zero in the air.
    */
   groundAlign: { acceleration: 700, damping: 0.25, maxAngularSpeed: 22 },
-  /** Extra pull into non-floor surfaces (walls, ceilings) while moving fast; see Simulation.applyGrip. */
-  grip: { acceleration: 4500, minSpeed: 120, rampSpeed: 150, maxFloorNormalY: -0.5 },
   /** Ticks a wheel stays "grounded" after its last contact (anti-flicker). */
   contactGraceTicks: 1,
 

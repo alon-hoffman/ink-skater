@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { PORTRAIT_QUERY, useMediaQuery } from '../app/hooks';
+import { PORTRAIT_QUERY, arrowNavigate, useMediaQuery } from '../app/hooks';
 import { audio, repositories } from '../app/services';
 import { GameScreen } from '../components/GameScreen';
 import { RotatePrompt } from '../components/RotatePrompt';
@@ -46,13 +46,13 @@ export function Editor({ levelId, fresh, onExit }: EditorProps): React.JSX.Eleme
   return <EditorWorkspace session={session} recovered={recovered} onExit={onExit} />;
 }
 
-const TOOLS: Array<{ tool: EditorTool; label: string; hint: string; icon: string }> = [
-  { tool: 'draw', label: 'Draw', hint: 'Draw terrain (D)', icon: '✏️' },
-  { tool: 'select', label: 'Select', hint: 'Select a stroke (V)', icon: '👆' },
-  { tool: 'move', label: 'Move', hint: 'Drag the selected stroke (M)', icon: '✥' },
-  { tool: 'pan', label: 'Pan', hint: 'Pan the view (H, or hold Space)', icon: '✋' },
-  { tool: 'spawn', label: 'Spawn', hint: 'Place the skater (S)', icon: '🛹' },
-  { tool: 'flag', label: 'Flag', hint: 'Place the goal flag (F)', icon: '🚩' },
+const TOOLS: Array<{ tool: EditorTool; label: string; hint: string; icon: string; key: string }> = [
+  { tool: 'draw', label: 'Draw', hint: 'Draw terrain (D)', icon: '✏️', key: 'D' },
+  { tool: 'select', label: 'Select', hint: 'Select a stroke (V)', icon: '👆', key: 'V' },
+  { tool: 'move', label: 'Move', hint: 'Drag the selected stroke (M)', icon: '✥', key: 'M' },
+  { tool: 'pan', label: 'Pan', hint: 'Pan the view (H, or hold Space)', icon: '✋', key: 'H' },
+  { tool: 'spawn', label: 'Spawn', hint: 'Place the skater (S)', icon: '🛹', key: 'S' },
+  { tool: 'flag', label: 'Flag', hint: 'Place the goal flag (F)', icon: '🚩', key: 'F' },
 ];
 
 interface PlaytestState {
@@ -212,12 +212,13 @@ function EditorWorkspace(props: {
       </header>
 
       <div className="editor-body">
-        <aside className="toolbar" aria-label="Tools">
+        <aside className="toolbar" aria-label="Tools" onKeyDown={(e) => arrowNavigate(e)}>
           {TOOLS.map((t) => (
             <button
               key={t.tool}
               className={`tool ${tool === t.tool ? 'active' : ''}`}
               title={t.hint}
+              aria-keyshortcuts={t.key}
               onClick={() => changeTool(t.tool)}
               aria-pressed={tool === t.tool}
             >

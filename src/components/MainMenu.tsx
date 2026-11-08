@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { audio } from '../app/services';
+import { arrowNavigate } from '../app/hooks';
 import type { Route } from '../app/navigation';
 
 export function MainMenu({ go }: { go: (route: Route) => void }): React.JSX.Element {
@@ -26,9 +27,12 @@ export function MainMenu({ go }: { go: (route: Route) => void }): React.JSX.Elem
           <path d="M148 36 L148 56 M148 42 L134 50 M148 42 L162 48 M148 56 L138 66 M148 56 L160 66" />
         </svg>
         <p className="tagline">Reach the flag. Don't hit your head.</p>
+        <p className="muted small keys-hint">
+          Keyboard: Space jump · Z turn · ←/→ tilt · Tab and Enter to navigate menus
+        </p>
       </div>
-      <nav className="menu-buttons">
-        <button className="btn big primary" onClick={() => enter({ name: 'levels' })}>
+      <nav className="menu-buttons" aria-label="Main menu" onKeyDown={(e) => arrowNavigate(e)}>
+        <button className="btn big primary" onClick={() => enter({ name: 'levels' })} autoFocus>
           Play
         </button>
         <button

@@ -1,6 +1,6 @@
 # Ink Skater
 
-A 2D side-scrolling skateboard physics game drawn like a black-pen sketch on notebook paper, with five hand-built levels and a full level editor. React + TypeScript + Vite, Matter.js physics, Canvas 2D rendering, Web Audio sound, localStorage persistence. No backend and no external assets.
+A 2D side-scrolling skateboard physics game drawn like a black-pen sketch on notebook paper, with seven hand-built levels and a full level editor. React + TypeScript + Vite, Matter.js physics, Canvas 2D rendering, Web Audio sound, localStorage persistence. No backend and no external assets.
 
 ## Prerequisites
 
@@ -20,10 +20,12 @@ Open the printed local URL. `npm run build` creates a production build in `dist/
 | Action                            | Keyboard                         | Touch (landscape)      |
 | --------------------------------- | -------------------------------- | ---------------------- |
 | Tilt counterclockwise / clockwise | Left / Right arrow or A / D      | Hold left / right half |
-| Crouch and charge a jump          | Hold both directions, or ↓       | Hold both halves       |
-| Jump                              | Release one direction (or ↓)   | Lift one finger        |
-| Turn around                       | Space                            | Swipe sideways         |
+| Crouch and charge a jump          | Hold Space (or ↓ / S, or both directions) | Hold both halves |
+| Jump                              | Release Space (or ↓ / S)         | Lift one finger        |
+| Turn around                       | Z                                | Swipe sideways         |
 | Restart / pause                   | R / Esc                          | On-screen buttons      |
+
+Menus are fully keyboard-driven: Tab / Shift+Tab move focus, arrow keys move between level cards, menu buttons and editor tools, Enter or Space activates, Esc goes back, closes dialogs, or pauses/resumes. Overlays trap focus while open and give it back when closed.
 
 The board rolls forward by itself. Hold tilt on the ground for wheelies and manuals; in the air spin is kept until you counter it. Only your head touching terrain (or falling out of the level) is fatal.
 
@@ -62,4 +64,4 @@ tests/         Vitest suites, including an autopilot that finishes every built-i
 
 ## Tuning notes
 
-All physics constants live in `src/game/physicsConfig.ts`. Two deliberate assists are documented there: a slightly negative rolling resistance (it cancels energy the solver bleeds from a rolling wheel) and a grip force on walls and ceilings so inverted riding works at reasonable speeds.
+All physics constants live in `src/game/physicsConfig.ts`. Two deliberate assists are documented there: a slightly negative rolling resistance (it cancels energy the solver bleeds from a rolling wheel), with no wall or ceiling riding assist (loops and inverted riding are not supported).

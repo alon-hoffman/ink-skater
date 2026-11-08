@@ -6,27 +6,6 @@ import type { Level } from './levelTypes';
  * Coordinates: y grows downward, the travel direction is +x.
  */
 
-/**
- * Tall wall that curves over into an overhead ceiling heading back (-x).
- * The wall base sits at (xw, floorY); total floor-to-ceiling height is 2R + H.
- */
-function wallToCeiling(args: {
-  xw: number;
-  floorY: number;
-  radius: number;
-  height: number;
-  ceilingLength: number;
-}) {
-  const { xw, floorY, radius: R, height: H, ceilingLength } = args;
-  const top = floorY - 2 * R - H;
-  return join(
-    arc(xw, floorY - R, R, Math.PI / 2, 0),
-    line(xw + R, floorY - R, xw + R, floorY - R - H),
-    arc(xw, floorY - R - H, R, 0, -Math.PI / 2),
-    line(xw, top, xw - ceilingLength, top),
-  );
-}
-
 /** Level 1: gentle rolling hills, no precision needed. */
 function firstRide(): Level {
   const ground = join(
@@ -99,45 +78,10 @@ function airTime(): Level {
   });
 }
 
-/** Level 4: build speed, then ride the wall up and over onto the ceiling where the flag hangs. */
-function upsideDown(): Level {
-  const R = 100;
-  const H = 60;
-  const xw = 2500;
-  const ceilingY = -(2 * R + H);
-  const descent = join(
-    line(-420, -1150, 120, -1150),
-    curve(
-      [120, -1150],
-      [420, -1130],
-      [760, -980],
-      [1050, -760],
-      [1300, -500],
-      [1500, -260],
-      [1680, -90],
-      [1850, -10],
-      [2000, 0],
-    ),
-    line(2000, 0, xw, 0),
-  );
-  const pipe = wallToCeiling({ xw, floorY: 0, radius: R, height: H, ceilingLength: 560 });
-  return builtInLevel({
-    id: 'builtin-4',
-    name: 'Upside Down',
-    difficulty: 'Medium',
-    strokes: [stroke('l4-descent', descent), stroke('l4-pipe', pipe)],
-    spawn: pt(60, spawnHeight(-1150)),
-    flag: pt(xw - 420, ceilingY + 100),
-  });
-}
-
-/** Level 5: downhill, three gaps, bumps, a steep landing, and a wall-and-ceiling finish. */
+/** Level 5: downhill, three gaps, bumps, and a steep landing before the flag. */
 function inkMaster(): Level {
-  const R = 100;
-  const H = 60;
   const floorY = 1260;
   const xw = 7200;
-  const ceilingY = floorY - (2 * R + H);
   const run = join(
     line(-420, -300, 100, -300),
     curve([100, -300], [400, -280], [700, -200], [1000, -90], [1250, -20], [1450, 0]),
@@ -155,7 +99,6 @@ function inkMaster(): Level {
     curve([5460, 540], [5600, 680], [5800, 950], [6200, 1200], [6500, floorY - 20], [6650, floorY]),
     line(6650, floorY, xw, floorY),
   );
-  const pipe = wallToCeiling({ xw, floorY, radius: R, height: H, ceilingLength: 560 });
   return builtInLevel({
     id: 'builtin-5',
     name: 'Ink Master',
@@ -165,10 +108,9 @@ function inkMaster(): Level {
       stroke('l5-bumps', bumps),
       stroke('l5-steep', steep),
       stroke('l5-finale', finale),
-      stroke('l5-pipe', pipe),
     ],
     spawn: pt(60, spawnHeight(-300)),
-    flag: pt(xw - 420, ceilingY + 100),
+    flag: pt(xw - 420, floorY),
   });
 }
 
@@ -255,7 +197,6 @@ export const BUILT_IN_LEVELS: readonly Level[] = [
   firstRide(),
   firstJump(),
   airTime(),
-  upsideDown(),
   inkMaster(),
   aboutFace(),
   switchback(),

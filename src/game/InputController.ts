@@ -1,4 +1,4 @@
-import { InputState } from './InputState';
+import { CROUCH_KEYS, FLIP_KEY, InputState } from './InputState';
 import type { InputSample, Zone } from './InputState';
 
 export interface InputCallbacks {
@@ -8,15 +8,7 @@ export interface InputCallbacks {
   onGesture?: () => void;
 }
 
-const GAME_KEYS = new Set([
-  'ArrowLeft',
-  'ArrowRight',
-  'ArrowDown',
-  'KeyA',
-  'KeyD',
-  'KeyS',
-  'Space',
-]);
+const GAME_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD', FLIP_KEY, ...CROUCH_KEYS]);
 
 /** A touch drag counts as a flip swipe past this horizontal distance (px) when mostly horizontal. */
 const SWIPE_MIN_DISTANCE = 50;
@@ -32,7 +24,8 @@ export class InputController {
 
   attach(): void {
     const onKeyDown = (e: KeyboardEvent): void => {
-      if (GAME_KEYS.has(e.code)) e.preventDefault();
+      // While locked (pause/win overlays) keys must keep working for the focused button.
+      if (!this.locked && GAME_KEYS.has(e.code)) e.preventDefault();
       this.callbacks.onGesture?.();
       if (e.repeat) return;
       if (e.code === 'Escape') {
@@ -46,7 +39,7 @@ export class InputController {
       if (!this.locked) this.state.keyDown(e.code);
     };
     const onKeyUp = (e: KeyboardEvent): void => {
-      if (GAME_KEYS.has(e.code)) e.preventDefault();
+      if (!this.locked && GAME_KEYS.has(e.code)) e.preventDefault();
       this.state.keyUp(e.code);
     };
     const reset = (): void => this.state.reset();
