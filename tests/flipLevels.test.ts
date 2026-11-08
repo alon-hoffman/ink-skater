@@ -15,20 +15,6 @@ const level = (id: string) => {
 };
 
 describe('levels that require turning around', () => {
-  it('About Face: the flag is behind the start, past a gap', () => {
-    const steps: ScriptStep[] = [
-      { until: atLeast(900) },
-      { flip: true, until: atMost(-290) },
-      { crouch: true, until: atMost(-370) },
-      { until: () => false },
-    ];
-    expect(runScript(level('builtin-6'), steps).won).toBe(true);
-  });
-
-  it('About Face cannot be won without turning', () => {
-    expect(runScript(level('builtin-6'), [{ until: () => false }], 25).won).toBe(false);
-  });
-
   it('Switchback: turn at each dead end to reach the next drop', () => {
     const steps: ScriptStep[] = [
       { until: (s) => x(s) >= 1750 && s.grounded },
@@ -52,5 +38,22 @@ describe('levels that require turning around', () => {
       { flip: true, until: () => false },
     ];
     expect(runScript(level('builtin-8'), steps).won).toBe(true);
+  });
+
+  it('Gauntlet: steps, a hop, a duck-and-leap, then a turn after the drop', () => {
+    const steps: ScriptStep[] = [
+      { until: atLeast(400) },
+      { crouch: true, until: atLeast(470) },
+      { until: atLeast(850) },
+      { crouch: true, until: atLeast(920) },
+      { until: atLeast(1650) },
+      { crouch: true, until: atLeast(1670) },
+      { until: atLeast(2400) },
+      { crouch: true, until: atLeast(2910) },
+      { until: (s) => s.skateboard.board.position.y > 50 && s.grounded && x(s) > 4300 },
+      { until: atLeast(4450) },
+      { flip: true, until: () => false },
+    ];
+    expect(runScript(level('builtin-13'), steps).won).toBe(true);
   });
 });

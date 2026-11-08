@@ -180,27 +180,27 @@ describe('skateboard physics', () => {
   });
 });
 
-const PLANS: PlannedJump[][] = [
-  [],
-  [
+const PLANS: Record<string, PlannedJump[]> = {
+  'builtin-1': [],
+  'builtin-2': [
     { at: 1030, charge: 0.25 },
     { at: 2080, charge: 0.25 },
   ],
-  [
+  'builtin-3': [
     { at: 1680, charge: 0.45 },
     { at: 3880, charge: 0.4 },
   ],
-  [
+  'builtin-5': [
     { at: 1790, charge: 0.4 },
     { at: 3290, charge: 0.5 },
     { at: 4890, charge: 0.7 },
   ],
-];
+};
 
 describe('built-in levels are completable', () => {
-  BUILT_IN_LEVELS.slice(0, PLANS.length).forEach((level, i) => {
+  BUILT_IN_LEVELS.filter((l) => l.id in PLANS).forEach((level) => {
     it(`${level.name} can be finished with the scripted autopilot`, () => {
-      const result = runBot(level, PLANS[i] ?? [], 60);
+      const result = runBot(level, PLANS[level.id] ?? [], 60);
       expect(result.won).toBe(true);
     }, 60_000);
   });

@@ -119,6 +119,8 @@ export interface ScriptStep {
   flip?: boolean;
   /** Hold crouch (charge a jump) while this step is active. */
   crouch?: boolean;
+  /** Keep the air stabiliser off (no tilt at all) while this step is active. */
+  noStabilize?: boolean;
 }
 
 /** Scripted autopilot for levels that need turns: a list of steps plus the same air stabiliser as `runBot`. */
@@ -148,7 +150,7 @@ export function runScript(level: Level, steps: ScriptStep[], maxSeconds = 60): B
     }
     const b = sim.skateboard.board;
     let tilt: -1 | 0 | 1 = 0;
-    if (!sim.grounded && Math.abs(b.angle) < 1.6) {
+    if (!sim.grounded && !step?.noStabilize && Math.abs(b.angle) < 1.6) {
       if (b.angle > 0.15) tilt = -1;
       else if (b.angle < -0.15) tilt = 1;
     }

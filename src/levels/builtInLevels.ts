@@ -126,20 +126,6 @@ function deadEnd(args: { x: number; floorY: number; side: 1 | -1; height: number
   );
 }
 
-/** Level 6: the flag is behind you. Build speed the other way, turn around and clear the gap. */
-function aboutFace(): Level {
-  const home = join(line(-400, 0, 1300, 0), deadEnd({ x: 1300, floorY: 0, side: 1, height: 260 }));
-  const far = line(-1300, 0, -600, 0);
-  return builtInLevel({
-    id: 'builtin-6',
-    name: 'About Face',
-    difficulty: 'Medium',
-    strokes: [stroke('l6-home', home), stroke('l6-far', far)],
-    spawn: pt(60, spawnHeight(0)),
-    flag: pt(-1150, 0),
-  });
-}
-
 /** Level 7: drop down two ledges; each one dead-ends, so you have to turn around to reach the next drop. */
 function switchback(): Level {
   const top = line(-420, 0, 1500, 0);
@@ -193,14 +179,174 @@ function zigzag(): Level {
   });
 }
 
+/** A staircase climbing in +x: `count` risers of `rise` px, each tread `tread` px long. */
+function stairs(args: { x: number; y: number; count: number; rise: number; tread: number }) {
+  const { x, y, count, rise, tread } = args;
+  const pts: [number, number][] = [];
+  for (let i = 0; i < count; i++) {
+    const sx = x + i * tread;
+    pts.push([sx, y - i * rise], [sx, y - (i + 1) * rise]);
+  }
+  const pieces = [];
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1];
+    const b = pts[i];
+    if (a && b) pieces.push(line(a[0], a[1], b[0], b[1]));
+  }
+  return join(...pieces);
+}
+
+/** Level 9: jump up a flight of steps. A missed step just stops you; back up and try again. */
+function stairway(): Level {
+  const ground = join(
+    line(-420, 0, 700, 0),
+    stairs({ x: 700, y: 0, count: 4, rise: 90, tread: 450 }),
+    line(700 + 3 * 450, -360, 3200, -360),
+  );
+  return builtInLevel({
+    id: 'builtin-9',
+    name: 'Stairway',
+    difficulty: 'Easy',
+    strokes: [stroke('l9-stairs', ground)],
+    spawn: pt(60, spawnHeight(0)),
+    flag: pt(2900, -360),
+  });
+}
+
+/** Level 10: a ski jump. Long flight onto a steep landing hill; tilt to meet the slope. */
+function skiJump(): Level {
+  const inrun = join(
+    line(-420, -900, 100, -900),
+    curve(
+      [100, -900],
+      [450, -820],
+      [800, -560],
+      [1100, -330],
+      [1260, -250],
+      [1340, -250],
+      [1420, -290],
+    ),
+  );
+  const hill = join(
+    curve(
+      [1380, -150],
+      [1650, -100],
+      [1900, 10],
+      [2200, 240],
+      [2500, 470],
+      [2800, 640],
+      [3100, 720],
+      [3400, 740],
+    ),
+    line(3400, 740, 4300, 740),
+  );
+  return builtInLevel({
+    id: 'builtin-10',
+    name: 'Ski Jump',
+    difficulty: 'Medium',
+    strokes: [stroke('l10-inrun', inrun), stroke('l10-hill', hill)],
+    spawn: pt(60, spawnHeight(-900)),
+    flag: pt(4000, 740),
+  });
+}
+
+/** Level 11: hop small gaps under a tunnel roof, then duck under a slab and leap as you come out. */
+function lowCeiling(): Level {
+  const a = line(-420, 0, 1100, 0);
+  const b = line(1200, 0, 1700, 0);
+  const c = line(1810, 0, 2600, 0);
+  const d = line(2790, 0, 3700, 0);
+  const roof = line(500, -170, 1950, -170);
+  const slab = line(2150, -88, 2550, -88);
+  return builtInLevel({
+    id: 'builtin-11',
+    name: 'Low Ceiling',
+    difficulty: 'Medium',
+    strokes: [
+      stroke('l11-a', a),
+      stroke('l11-b', b),
+      stroke('l11-c', c),
+      stroke('l11-d', d),
+      stroke('l11-roof', roof),
+      stroke('l11-slab', slab),
+    ],
+    spawn: pt(60, spawnHeight(0)),
+    flag: pt(3400, 0),
+  });
+}
+
+/** Level 12: a long descent split by ever wider gaps; you keep gaining speed, so every jump comes faster. */
+function downhillRush(): Level {
+  const slope = 0.25;
+  const y = (x: number) => (x - 300) * slope;
+  const piece = (x0: number, x1: number) => line(x0, y(x0), x1, y(x1));
+  const s1 = join(line(-420, 0, 300, 0), piece(300, 1300));
+  const s5 = join(
+    piece(4650, 5000),
+    curve([5000, y(5000)], [5250, y(5000) + 50], [5500, y(5000) + 70]),
+    line(5500, y(5000) + 70, 6400, y(5000) + 70),
+  );
+  return builtInLevel({
+    id: 'builtin-12',
+    name: 'Downhill Rush',
+    difficulty: 'Hard',
+    strokes: [
+      stroke('l12-1', s1),
+      stroke('l12-2', piece(1550, 2100)),
+      stroke('l12-3', piece(2500, 3000)),
+      stroke('l12-4', piece(3500, 4100)),
+      stroke('l12-5', s5),
+    ],
+    spawn: pt(60, spawnHeight(0)),
+    flag: pt(6100, y(5000) + 70),
+  });
+}
+
+/** Level 13: steps, a roofed hop, a duck-and-leap, then a drop onto a dead end and a turn to the flag. */
+function gauntlet(): Level {
+  const top = -180;
+  const climb = join(
+    line(-420, 0, 600, 0),
+    stairs({ x: 600, y: 0, count: 2, rise: 90, tread: 450 }),
+    line(1050, top, 1700, top),
+  );
+  const mid = line(1800, top, 2950, top);
+  const roof = line(1300, top - 170, 2300, top - 170);
+  const slab = line(2550, top - 88, 2900, top - 88);
+  const ledge = line(3140, top, 4200, top);
+  const floor = join(
+    line(3400, 120, 4600, 120),
+    deadEnd({ x: 4600, floorY: 120, side: 1, height: 240 }),
+  );
+  return builtInLevel({
+    id: 'builtin-13',
+    name: 'Gauntlet',
+    difficulty: 'Expert',
+    strokes: [
+      stroke('l13-climb', climb),
+      stroke('l13-mid', mid),
+      stroke('l13-roof', roof),
+      stroke('l13-slab', slab),
+      stroke('l13-ledge', ledge),
+      stroke('l13-floor', floor),
+    ],
+    spawn: pt(60, spawnHeight(0)),
+    flag: pt(3650, 120),
+  });
+}
+
 export const BUILT_IN_LEVELS: readonly Level[] = [
   firstRide(),
   firstJump(),
+  stairway(),
   airTime(),
+  skiJump(),
+  lowCeiling(),
   inkMaster(),
-  aboutFace(),
   switchback(),
+  downhillRush(),
   zigzag(),
+  gauntlet(),
 ];
 
 export function getBuiltInLevel(id: string): Level | undefined {
