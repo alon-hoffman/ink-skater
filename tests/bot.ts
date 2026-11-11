@@ -21,13 +21,23 @@ export interface BotResult {
   deathPoints: string[];
 }
 
+/** Tilt against the board angle relative to the ground (dead-zone), so landings and slopes stay balanced. */
+export function groundTilt(sim: Simulation, deadZone = 0.12): -1 | 0 | 1 {
+  const n = sim.contacts.groundNormal;
+  const target = n ? Math.atan2(n.x, -n.y) : 0;
+  const diff = sim.skateboard.board.angle - target;
+  const err = Math.atan2(Math.sin(diff), Math.cos(diff));
+  if (Math.abs(err) > 1.6) return 0;
+  return err > deadZone ? -1 : err < -deadZone ? 1 : 0;
+}
+
 /** Scripted autopilot: planned jumps plus a simple upright-seeking air/ground stabiliser. */
 export function runBot(
   level: Level,
   jumps: PlannedJump[],
   maxSeconds = 90,
   log?: (s: string) => void,
-  opts: { wallLean?: boolean; stopAtX?: number } = {},
+  opts: { wallLean?: boolean; stopAtX?: number; noGroundStabilize?: boolean } = {},
 ): BotResult {
   const deathPoints: string[] = [];
   const sim = new Simulation(level, {
@@ -91,6 +101,7 @@ export function runBot(
         }
       }
     }
+    if (sim.grounded && !opts.noGroundStabilize) tilt = groundTilt(sim);
     if (sim.grounded && opts.wallLean && b.angle < -0.3 && b.angle > -3.4) tilt = -1;
     const input: InputSample = { tilt, crouch, flip: false };
     sim.step(input);
@@ -154,6 +165,7 @@ export function runScript(level: Level, steps: ScriptStep[], maxSeconds = 60): B
       if (b.angle > 0.15) tilt = -1;
       else if (b.angle < -0.15) tilt = 1;
     }
+    if (sim.grounded && !step?.noStabilize) tilt = groundTilt(sim);
     sim.step({ tilt, crouch: !!step?.crouch, flip: fresh && !!step?.flip });
     fresh = false;
     total++;

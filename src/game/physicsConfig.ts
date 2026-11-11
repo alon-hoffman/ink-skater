@@ -47,11 +47,6 @@ export const PHYSICS = {
     worldUpWeight: 0.7,
     cooldownSeconds: 0.15,
   },
-  /**
-   * Grounded alignment assist (only while no tilt is held): eases the deck toward the surface normal so
-   * the board follows curves and walls instead of peeling off one wheel. Zero in the air.
-   */
-  groundAlign: { acceleration: 700, damping: 0.25, maxAngularSpeed: 22 },
   /** Ticks a wheel stays "grounded" after its last contact (anti-flicker). */
   contactGraceTicks: 1,
 

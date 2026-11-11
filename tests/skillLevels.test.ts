@@ -50,10 +50,9 @@ describe('Ski Jump', () => {
     expect(runScript(level('builtin-10'), jump, 15).won).toBe(true);
   });
 
-  it('crashes without tilting: the lip kicks the nose up', () => {
-    const result = runScript(level('builtin-10'), [{ noStabilize: true, until: never }], 8);
-    expect(result.won).toBe(false);
-    expect(result.deaths).toBeGreaterThan(0);
+  it('can be ridden hands-off: the lip no longer flips the board without the leveling assist', () => {
+    const result = runScript(level('builtin-10'), [{ noStabilize: true, until: never }], 15);
+    expect(result).toMatchObject({ won: true, deaths: 0 });
   });
 });
 

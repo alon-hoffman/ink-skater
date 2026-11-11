@@ -335,6 +335,58 @@ function gauntlet(): Level {
   });
 }
 
+/** Level 14: a kicker lip throws the nose up; tilt down in flight to meet the steep landing slope. */
+function noseDive(): Level {
+  const inrun = join(
+    line(-420, -700, 100, -700),
+    curve([100, -700], [450, -640], [800, -400], [1050, -230], [1250, -170]),
+    curve([1250, -170], [1350, -170], [1450, -215], [1520, -290]),
+  );
+  const slope = join(
+    curve([1780, -60], [1900, 30], [2050, 280], [2200, 550], [2350, 800]),
+    curve([2350, 800], [2500, 900], [2700, 920]),
+    line(2700, 920, 4200, 920),
+  );
+  return builtInLevel({
+    id: 'builtin-14',
+    name: 'Nose Dive',
+    difficulty: 'Hard',
+    strokes: [stroke('l14-inrun', inrun), stroke('l14-slope', slope)],
+    spawn: pt(60, spawnHeight(-700)),
+    flag: pt(3700, 920),
+  });
+}
+
+/** Level 15: two ski jumps back to back; the first landing sets the speed and attitude for the second lip. */
+function doubleDive(): Level {
+  const inrun = join(
+    line(-420, -700, 100, -700),
+    curve([100, -700], [450, -640], [800, -400], [1050, -230], [1250, -170]),
+    curve([1250, -170], [1350, -170], [1450, -215], [1520, -290]),
+  );
+  const valley = join(
+    curve([1780, -60], [1900, 30], [2050, 280], [2200, 520], [2350, 680]),
+    curve([2350, 680], [2500, 760], [2650, 740], [2800, 680], [2900, 600]),
+  );
+  const landing = join(
+    curve([3150, 540], [3300, 620], [3450, 900], [3600, 1150]),
+    curve([3600, 1150], [3750, 1250], [4100, 1270]),
+    line(4100, 1270, 5000, 1270),
+  );
+  return builtInLevel({
+    id: 'builtin-15',
+    name: 'Double Dive',
+    difficulty: 'Expert',
+    strokes: [
+      stroke('l15-inrun', inrun),
+      stroke('l15-valley', valley),
+      stroke('l15-landing', landing),
+    ],
+    spawn: pt(60, spawnHeight(-700)),
+    flag: pt(4700, 1270),
+  });
+}
+
 export const BUILT_IN_LEVELS: readonly Level[] = [
   firstRide(),
   firstJump(),
@@ -345,8 +397,10 @@ export const BUILT_IN_LEVELS: readonly Level[] = [
   inkMaster(),
   switchback(),
   downhillRush(),
+  noseDive(),
   zigzag(),
   gauntlet(),
+  doubleDive(),
 ];
 
 export function getBuiltInLevel(id: string): Level | undefined {

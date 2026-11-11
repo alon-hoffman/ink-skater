@@ -294,7 +294,6 @@ export class Simulation {
       const accel = grounded ? PHYSICS.groundTiltAcceleration : PHYSICS.tiltAcceleration;
       sb.addAngularVelocity(input.tilt * accel * DT * DT, this.tiltPivot(input.tilt));
     }
-    if (grounded && input.tilt === 0) this.alignToGround();
     const damping = grounded ? PHYSICS.groundAngularDamping : PHYSICS.airAngularDamping;
     if (damping > 0) sb.addAngularVelocity(-sb.angularVelocity() * damping);
     sb.clampAngular((grounded ? PHYSICS.groundMaxAngularSpeed : PHYSICS.maxAngularSpeed) * DT);
@@ -308,22 +307,6 @@ export class Simulation {
     const maxPerTick = PHYSICS.maxSpeed * DT;
     const speed = Math.hypot(v.x, v.y);
     if (speed > maxPerTick) sb.scaleVelocity(maxPerTick / speed);
-  }
-
-  /** Ease the board toward the average ground normal; the board stays free to rotate with tilt input. */
-  private alignToGround(): void {
-    const normal = this.contacts.groundNormal;
-    if (!normal) return;
-    const sb = this.skateboard;
-    const target = Math.atan2(normal.x, -normal.y);
-    let err = target - sb.board.angle;
-    err = Math.atan2(Math.sin(err), Math.cos(err));
-    const cfg = PHYSICS.groundAlign;
-    const omega = sb.angularVelocity();
-    let d = cfg.acceleration * err * DT * DT - omega * cfg.damping;
-    const limit = cfg.maxAngularSpeed * DT;
-    d = Math.max(-limit - omega, Math.min(limit - omega, d));
-    sb.addAngularVelocity(d);
   }
 
   /**
