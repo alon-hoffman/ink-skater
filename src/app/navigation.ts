@@ -1,6 +1,7 @@
 export type Route =
+  | { name: 'splash' }
   | { name: 'menu' }
-  | { name: 'levels' }
+  | { name: 'levels'; worldId?: string }
   | { name: 'myLevels' }
   | { name: 'tutorial' }
   | { name: 'play'; levelId: string; from: 'levels' | 'myLevels' }

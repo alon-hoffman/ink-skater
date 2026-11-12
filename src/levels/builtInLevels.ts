@@ -1,5 +1,8 @@
 import { arc, builtInLevel, curve, join, line, pt, spawnHeight, stroke } from './levelFactory';
 import type { Level } from './levelTypes';
+import { NEW_LEVELS } from './newLevels';
+import { OBJECTIVE_TARGETS } from './objectiveTargets';
+import { WORLDS } from './worlds';
 
 /**
  * Hand-built courses. They use exactly the same stroke format as custom levels.
@@ -387,7 +390,8 @@ function doubleDive(): Level {
   });
 }
 
-export const BUILT_IN_LEVELS: readonly Level[] = [
+/** Every built-in level by id, before worlds decide the play order. */
+const ALL_LEVELS: readonly Level[] = [
   firstRide(),
   firstJump(),
   stairway(),
@@ -401,7 +405,18 @@ export const BUILT_IN_LEVELS: readonly Level[] = [
   zigzag(),
   gauntlet(),
   doubleDive(),
+  ...NEW_LEVELS,
 ];
+
+/** Built-in levels in play order: world by world. Each level knows its world and its objectives. */
+export const BUILT_IN_LEVELS: readonly Level[] = WORLDS.flatMap((world) =>
+  world.levelIds.flatMap((id) => {
+    const level = ALL_LEVELS.find((l) => l.id === id);
+    if (!level) return [];
+    const objectives = OBJECTIVE_TARGETS[id];
+    return [{ ...level, worldId: world.id, ...(objectives ? { objectives } : {}) }];
+  }),
+);
 
 export function getBuiltInLevel(id: string): Level | undefined {
   return BUILT_IN_LEVELS.find((l) => l.id === id);

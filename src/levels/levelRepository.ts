@@ -1,3 +1,4 @@
+import type { LevelProgress, ObjectiveResult } from './objectives';
 import type { Level } from './levelTypes';
 
 /** Persistence contract for custom levels. A remote implementation can replace the local one. */
@@ -33,8 +34,16 @@ export interface RecordsRepository {
   submit(levelId: string, time: number): Promise<RecordSubmission>;
 }
 
+/** Which objectives were earned on each built-in level, and the best trick score. */
+export interface ProgressRepository {
+  getAll(): Promise<Record<string, LevelProgress>>;
+  /** Merge a finished run into the saved progress and return the new state for that level. */
+  submit(levelId: string, result: ObjectiveResult, score: number): Promise<LevelProgress>;
+}
+
 export interface Repositories {
   levels: LevelRepository;
   drafts: DraftRepository;
   records: RecordsRepository;
+  progress: ProgressRepository;
 }

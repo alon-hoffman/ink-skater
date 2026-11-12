@@ -1,4 +1,5 @@
 import type { Level } from '../levels/levelTypes';
+import { worldOfLevel } from '../levels/worlds';
 import type { AudioManager } from './AudioManager';
 import { Camera } from './Camera';
 import type { CameraTarget } from './Camera';
@@ -13,11 +14,20 @@ export interface GameOptions {
   canvas: HTMLCanvasElement;
   level: Level;
   audio: AudioManager;
-  /** Called once per completion with the finish time in seconds. */
-  onComplete: (time: number) => void;
+  /** Called once per completion with the finish time in seconds and the trick points of that run. */
+  onComplete: (result: { time: number; score: number }) => void;
   onPauseChange: (paused: boolean) => void;
   /** HUD elements are updated imperatively so physics never triggers React renders. */
-  hud?: { time?: HTMLElement | null; charge?: HTMLElement | null };
+  hud?: {
+    time?: HTMLElement | null;
+    charge?: HTMLElement | null;
+    score?: HTMLElement | null;
+    /** Live line showing the manual being ridden, e.g. "Manual +35". */
+    trick?: HTMLElement | null;
+    /** Objective chips: their data-state attribute follows the run. */
+    objTime?: HTMLElement | null;
+    objScore?: HTMLElement | null;
+  };
 }
 
 export function formatTime(seconds: number): string {
@@ -48,6 +58,10 @@ export class Game {
   private flash = 0;
   private lastTimeText = '';
   private lastCharge = -1;
+  private lastScoreText = '';
+  private lastTrickText = '';
+  private lastTimeState = '';
+  private lastScoreState = '';
 
   constructor(private readonly options: GameOptions) {
     const { canvas, level, audio } = options;
@@ -68,15 +82,20 @@ export class Game {
         const head = this.sim.headWorld();
         this.effects.crash(head);
       },
-      onVictory: (time) => {
+      onTrick: (event) => {
+        audio.trick();
+        const head = this.sim.headWorld();
+        this.effects.label(`+${event.points} ${event.label}`, { x: head.x, y: head.y - 46 });
+      },
+      onVictory: (time, score) => {
         this.completed = true;
         audio.victory();
         audio.silenceRolling();
         this.effects.celebrate(level.flag);
-        options.onComplete(time);
+        options.onComplete({ time, score });
       },
     });
-    this.renderer = new GameRenderer(level);
+    this.renderer = new GameRenderer(level, worldOfLevel(level.id)?.paper);
     this.input = new InputController({
       onRestart: () => this.restart(),
       onPauseToggle: () => (this.paused ? this.resume() : this.pause()),
@@ -145,6 +164,8 @@ export class Game {
     this.sim.restart();
     this.effects.clear();
     this.flash = 0;
+    this.lastTimeState = '';
+    this.lastScoreState = '';
     this.snapCamera();
     this.loop.stepping = true;
     this.loop.resetClock();
@@ -199,12 +220,42 @@ export class Game {
   }
 
   private updateHud(): void {
-    const { time, charge } = this.options.hud ?? {};
+    const { time, charge, score, trick, objTime, objScore } = this.options.hud ?? {};
+    const objectives = this.options.level.objectives;
     if (time) {
       const text = formatTime(this.sim.time);
       if (text !== this.lastTimeText) {
         time.textContent = text;
         this.lastTimeText = text;
+      }
+    }
+    if (score) {
+      const text = `Score ${this.sim.score}`;
+      if (text !== this.lastScoreText) {
+        score.textContent = text;
+        this.lastScoreText = text;
+      }
+    }
+    if (trick) {
+      const pending = this.sim.tricks.pendingManualPoints;
+      const text = pending > 0 ? `Manual +${pending}` : '';
+      if (text !== this.lastTrickText) {
+        trick.textContent = text;
+        this.lastTrickText = text;
+      }
+    }
+    if (objectives && objTime) {
+      const state = this.sim.time > objectives.timeLimit ? 'missed' : 'live';
+      if (state !== this.lastTimeState) {
+        objTime.dataset.state = state;
+        this.lastTimeState = state;
+      }
+    }
+    if (objectives && objScore) {
+      const state = this.sim.score >= objectives.scoreTarget ? 'hit' : 'live';
+      if (state !== this.lastScoreState) {
+        objScore.dataset.state = state;
+        this.lastScoreState = state;
       }
     }
     if (charge) {

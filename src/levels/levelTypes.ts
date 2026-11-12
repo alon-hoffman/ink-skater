@@ -20,6 +20,16 @@ export interface Stroke {
 
 export type SpawnDirection = 1 | -1;
 export type LevelKind = 'builtin' | 'custom';
+/** The kind of sketch paper a level is drawn on. */
+export type PaperStyle = 'lined' | 'graph' | 'legal' | 'blueprint';
+
+/** Built-in levels only: the targets for the two bonus objectives (finishing is always the first). */
+export interface LevelObjectives {
+  /** Finish within this many seconds. */
+  timeLimit: number;
+  /** Finish with at least this many trick points. */
+  scoreTarget: number;
+}
 
 /**
  * Validation records which revision of the level was completed.
@@ -48,6 +58,10 @@ export interface Level {
   validation: ValidationInfo;
   /** Built-in only: short difficulty label for menus. */
   difficulty?: string;
+  /** Built-in only: which world (and so which paper) the level belongs to. */
+  worldId?: string;
+  /** Built-in only: time and score objectives. */
+  objectives?: LevelObjectives;
 }
 
 /** The gameplay-relevant, user-editable part of a level (what the editor history tracks). */
@@ -61,4 +75,5 @@ export interface LevelContent {
 export interface CompletionResult {
   levelId: string;
   time: number;
+  score: number;
 }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { GameScreen } from '../components/GameScreen';
 import { LevelSelect } from '../components/LevelSelect';
 import { MainMenu } from '../components/MainMenu';
+import { Splash } from '../components/Splash';
 import { MyLevels } from '../components/MyLevels';
 import { Tutorial } from '../components/Tutorial';
 import { Editor } from '../editor/Editor';
@@ -13,13 +14,15 @@ import { repositories } from './services';
 import { useEffect } from 'react';
 
 export function App(): React.JSX.Element {
-  const [route, setRoute] = useState<Route>(MENU);
+  const [route, setRoute] = useState<Route>({ name: 'splash' });
 
   switch (route.name) {
+    case 'splash':
+      return <Splash go={setRoute} />;
     case 'menu':
       return <MainMenu go={setRoute} />;
     case 'levels':
-      return <LevelSelect go={setRoute} />;
+      return <LevelSelect go={setRoute} worldId={route.worldId} />;
     case 'myLevels':
       return <MyLevels go={setRoute} />;
     case 'tutorial':

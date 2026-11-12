@@ -1,7 +1,8 @@
-import type { Level } from '../levels/levelTypes';
+import type { Level, PaperStyle } from '../levels/levelTypes';
 import type { CameraView } from './Camera';
 import type { Effects } from './Effects';
-import { RED_INK, drawFlag, drawPaper, drawSkater, drawStrokeInk } from './inkDrawing';
+import { drawFlag, drawPaper, drawSkater, drawStrokeInk, paperTheme } from './inkDrawing';
+import type { PaperTheme } from './inkDrawing';
 import { PHYSICS } from './physicsConfig';
 import type { Simulation } from './Simulation';
 import { strokeGeometry } from '../levels/geometry';
@@ -22,10 +23,17 @@ export interface RenderFrame {
 
 /** Draws one frame of the game world. Pure presentation: reads simulation state, never writes it. */
 export class GameRenderer {
-  constructor(private readonly level: Level) {}
+  private readonly theme: PaperTheme;
+
+  constructor(
+    private readonly level: Level,
+    paper: PaperStyle = 'lined',
+  ) {
+    this.theme = paperTheme(paper);
+  }
 
   render(ctx: CanvasRenderingContext2D, sim: Simulation, effects: Effects, f: RenderFrame): void {
-    drawPaper(ctx, f, f.view);
+    drawPaper(ctx, f, f.view, this.theme.style);
 
     const { view } = f;
     ctx.setTransform(
@@ -47,15 +55,15 @@ export class GameRenderer {
     for (const stroke of this.level.strokes) {
       const b = strokeGeometry(stroke).bounds;
       if (b.maxX < left || b.minX > right || b.maxY < top || b.minY > bottom) continue;
-      drawStrokeInk(ctx, stroke);
+      drawStrokeInk(ctx, stroke, { color: this.theme.ink });
     }
 
-    drawFlag(ctx, this.level.flag, f.clock);
+    drawFlag(ctx, this.level.flag, f.clock, this.theme);
 
     const t = sim.interpolated(f.alpha);
     this.drawSpeedLines(ctx, sim, t.board, f);
-    effects.draw(ctx);
-    drawSkater(ctx, t, sim.currentPose());
+    effects.draw(ctx, this.theme.ink, this.theme.accent);
+    drawSkater(ctx, t, sim.currentPose(), { theme: this.theme });
     this.drawChargeRing(ctx, sim, t.board);
 
     if (f.flash > 0) this.drawFlash(ctx, f);
@@ -75,7 +83,7 @@ export class GameRenderer {
     const dx = v.x / len;
     const dy = v.y / len;
     ctx.save();
-    ctx.strokeStyle = '#25252b';
+    ctx.strokeStyle = this.theme.ink;
     ctx.lineCap = 'round';
     ctx.lineWidth = 1.6;
     ctx.globalAlpha = 0.28 * strength;
@@ -107,12 +115,14 @@ export class GameRenderer {
     const cy = head.y - PHYSICS.head.radius - 22;
     ctx.save();
     ctx.lineCap = 'round';
-    ctx.strokeStyle = 'rgba(31,31,38,0.25)';
+    ctx.strokeStyle = this.theme.ink;
+    ctx.globalAlpha = 0.25;
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.stroke();
-    ctx.strokeStyle = c > 0.95 ? RED_INK : '#1f1f26';
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = c > 0.95 ? this.theme.accent : this.theme.ink;
     ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0.02, c));

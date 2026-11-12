@@ -192,6 +192,65 @@ const STEPS: Step[] = [
     ),
   },
   {
+    title: 'Tricks and objectives',
+    art: (
+      <svg viewBox="0 0 240 120" className="tut-art-svg" aria-hidden="true">
+        <path className="tut-ink" d="M8 100 L232 100" />
+        <path className="tut-trail" d="M40 96 C 70 20, 150 20, 180 90" />
+        <path className="tut-hazard" d="M96 40 a14 14 0 1 1 28 0" />
+        <path className="tut-hazard" d="M124 40 l-6 -5 M124 40 l-7 4" />
+        <text className="tut-label" x="110" y="68">
+          +100
+        </text>
+        <rect className="tut-keycap" x="176" y="12" width="14" height="14" rx="3" />
+        <text className="tut-label" x="213" y="24">
+          Finish
+        </text>
+        <rect className="tut-keycap" x="176" y="32" width="14" height="14" rx="3" />
+        <text className="tut-label" x="206" y="44">
+          Time
+        </text>
+      </svg>
+    ),
+    body: (
+      <ul className="tut-keys">
+        <li>
+          <span className="tut-bullet" aria-hidden="true">
+            •
+          </span>
+          <span>
+            <b>Flip:</b> spin all the way round in the air and land it for 100 points. Double spins
+            are worth more.
+          </span>
+        </li>
+        <li>
+          <span className="tut-bullet" aria-hidden="true">
+            •
+          </span>
+          <span>
+            <b>Manual:</b> ride on just one wheel for at least half a second. It earns points for
+            every second you hold it.
+          </span>
+        </li>
+        <li>
+          <span className="tut-bullet" aria-hidden="true">
+            •
+          </span>
+          <span>A crash wipes the points of that run, so land your tricks and keep going.</span>
+        </li>
+        <li>
+          <span className="tut-bullet" aria-hidden="true">
+            •
+          </span>
+          <span>
+            Every level has three separate checkmarks: reach the flag, beat the time limit, and
+            reach the score. Each world opens when you finish the last level of the one before.
+          </span>
+        </li>
+      </ul>
+    ),
+  },
+  {
     title: 'Level editor',
     art: (
       <svg viewBox="0 0 240 120" className="tut-art-svg" aria-hidden="true">

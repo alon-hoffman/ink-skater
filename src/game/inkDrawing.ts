@@ -1,5 +1,5 @@
 import { strokeGeometry } from '../levels/geometry';
-import type { Stroke, Vec2 } from '../levels/levelTypes';
+import type { PaperStyle, Stroke, Vec2 } from '../levels/levelTypes';
 import type { Pose } from './Pose';
 import { PHYSICS } from './physicsConfig';
 import type { Transform } from './Skateboard';
@@ -12,6 +12,26 @@ export const LINE_BLUE = 'rgba(112, 150, 196, 0.32)';
 export const MARGIN_RED = 'rgba(214, 98, 98, 0.32)';
 export const RED_INK = '#c0392b';
 export const RULE_SPACING = 32;
+
+/** Colours used to draw the course and skater on each kind of paper. */
+export interface PaperTheme {
+  style: PaperStyle;
+  paper: string;
+  ink: string;
+  /** The "red pen" colour: flag, charge ring, crash marks. */
+  accent: string;
+}
+
+export const PAPER_THEMES: Record<PaperStyle, PaperTheme> = {
+  lined: { style: 'lined', paper: PAPER, ink: INK, accent: RED_INK },
+  graph: { style: 'graph', paper: '#f1f5ec', ink: INK, accent: RED_INK },
+  legal: { style: 'legal', paper: '#f4e9a6', ink: INK, accent: RED_INK },
+  blueprint: { style: 'blueprint', paper: '#1d4f91', ink: '#eef4ff', accent: '#ffc27a' },
+};
+
+export function paperTheme(style: PaperStyle | undefined): PaperTheme {
+  return PAPER_THEMES[style ?? 'lined'];
+}
 
 function hashString(s: string): number {
   let h = 2166136261;
@@ -49,39 +69,95 @@ function getPaperTile(): HTMLCanvasElement {
   return c;
 }
 
-/** Notebook page in screen space. Rules scroll vertically with the camera, grain stays put. */
+/** Lines at every multiple of `spacing` in world space (vertical and/or horizontal), scrolled by the camera. */
+function drawGrid(
+  ctx: CanvasRenderingContext2D,
+  size: { w: number; h: number },
+  view: { x: number; y: number; scale: number },
+  spacing: number,
+  axes: { vertical: boolean; horizontal: boolean },
+  every = 1,
+): void {
+  const { w, h } = size;
+  const step = spacing * every * view.scale;
+  if (step < 3) return;
+  ctx.beginPath();
+  if (axes.horizontal) {
+    const first = Math.floor((view.y - h / 2 / view.scale) / (spacing * every)) * spacing * every;
+    for (let wy = first; ; wy += spacing * every) {
+      const sy = Math.round((wy - view.y) * view.scale + h / 2) + 0.5;
+      if (sy > h) break;
+      ctx.moveTo(0, sy);
+      ctx.lineTo(w, sy);
+    }
+  }
+  if (axes.vertical) {
+    const first = Math.floor((view.x - w / 2 / view.scale) / (spacing * every)) * spacing * every;
+    for (let wx = first; ; wx += spacing * every) {
+      const sx = Math.round((wx - view.x) * view.scale + w / 2) + 0.5;
+      if (sx > w) break;
+      ctx.moveTo(sx, 0);
+      ctx.lineTo(sx, h);
+    }
+  }
+  ctx.stroke();
+}
+
+/** Page in screen space. Rules and grids scroll with the camera; grain stays put. */
 export function drawPaper(
   ctx: CanvasRenderingContext2D,
   size: { w: number; h: number; dpr: number },
-  view: { y: number; scale: number },
+  view: { x?: number; y: number; scale: number },
+  style: PaperStyle = 'lined',
 ): void {
   const { w, h, dpr } = size;
+  const theme = PAPER_THEMES[style];
+  const v = { x: view.x ?? 0, y: view.y, scale: view.scale };
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = PAPER;
+  ctx.fillStyle = theme.paper;
   ctx.fillRect(0, 0, w, h);
   const pattern = ctx.createPattern(getPaperTile(), 'repeat');
   if (pattern) {
+    ctx.save();
+    ctx.globalAlpha = style === 'blueprint' ? 0.3 : 1;
     ctx.fillStyle = pattern;
     ctx.fillRect(0, 0, w, h);
+    ctx.restore();
   }
-  ctx.strokeStyle = LINE_BLUE;
   ctx.lineWidth = 1;
-  const spacing = RULE_SPACING * view.scale;
-  const first = Math.floor((view.y - h / 2 / view.scale) / RULE_SPACING) * RULE_SPACING;
-  ctx.beginPath();
-  for (let wy = first; ; wy += RULE_SPACING) {
-    const sy = Math.round((wy - view.y) * view.scale + h / 2) + 0.5;
-    if (sy > h) break;
-    ctx.moveTo(0, sy);
-    ctx.lineTo(w, sy);
-    if (spacing < 3) break;
-  }
-  ctx.stroke();
   const marginX = Math.round(Math.max(36, w * 0.07)) + 0.5;
-  ctx.strokeStyle = MARGIN_RED;
+
+  if (style === 'graph') {
+    ctx.strokeStyle = 'rgba(56, 140, 120, 0.2)';
+    drawGrid(ctx, size, v, RULE_SPACING, { vertical: true, horizontal: true });
+    ctx.strokeStyle = 'rgba(56, 140, 120, 0.42)';
+    drawGrid(ctx, size, v, RULE_SPACING, { vertical: true, horizontal: true }, 4);
+    return;
+  }
+
+  if (style === 'blueprint') {
+    const g = ctx.createRadialGradient(w / 2, h / 2, h * 0.25, w / 2, h / 2, w * 0.75);
+    g.addColorStop(0, 'rgba(255,255,255,0.07)');
+    g.addColorStop(1, 'rgba(0,10,40,0.28)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.11)';
+    drawGrid(ctx, size, v, RULE_SPACING, { vertical: true, horizontal: true });
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.26)';
+    drawGrid(ctx, size, v, RULE_SPACING, { vertical: true, horizontal: true }, 4);
+    return;
+  }
+
+  ctx.strokeStyle = style === 'legal' ? 'rgba(66, 104, 170, 0.45)' : LINE_BLUE;
+  drawGrid(ctx, size, v, RULE_SPACING, { vertical: false, horizontal: true });
+  ctx.strokeStyle = style === 'legal' ? 'rgba(204, 64, 64, 0.55)' : MARGIN_RED;
   ctx.beginPath();
   ctx.moveTo(marginX, 0);
   ctx.lineTo(marginX, h);
+  if (style === 'legal') {
+    ctx.moveTo(marginX + 5, 0);
+    ctx.lineTo(marginX + 5, h);
+  }
   ctx.stroke();
 }
 
@@ -158,12 +234,17 @@ export function drawPolylineInk(
 
 export const FLAG_HEIGHT = 100;
 
-export function drawFlag(ctx: CanvasRenderingContext2D, at: Vec2, time: number): void {
+export function drawFlag(
+  ctx: CanvasRenderingContext2D,
+  at: Vec2,
+  time: number,
+  theme: PaperTheme = PAPER_THEMES.lined,
+): void {
   const top = at.y - FLAG_HEIGHT;
   ctx.save();
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  ctx.strokeStyle = INK;
+  ctx.strokeStyle = theme.ink;
   ctx.lineWidth = 3.2;
   ctx.beginPath();
   ctx.moveTo(at.x, at.y);
@@ -175,9 +256,9 @@ export function drawFlag(ctx: CanvasRenderingContext2D, at: Vec2, time: number):
   ctx.quadraticCurveTo(at.x + 22, top + 2 + wave, at.x + 48, top + 14 + wave * 0.6);
   ctx.quadraticCurveTo(at.x + 24, top + 24 + wave, at.x, top + 30);
   ctx.closePath();
-  ctx.fillStyle = 'rgba(192, 57, 43, 0.28)';
+  ctx.fillStyle = theme.style === 'blueprint' ? 'rgba(255, 194, 122, 0.3)' : 'rgba(192, 57, 43, 0.28)';
   ctx.fill();
-  ctx.strokeStyle = RED_INK;
+  ctx.strokeStyle = theme.accent;
   ctx.lineWidth = 2.6;
   ctx.stroke();
   ctx.lineWidth = 1.4;
@@ -189,7 +270,7 @@ export function drawFlag(ctx: CanvasRenderingContext2D, at: Vec2, time: number):
   }
   ctx.stroke();
   ctx.globalAlpha = 1;
-  ctx.strokeStyle = INK;
+  ctx.strokeStyle = theme.ink;
   ctx.lineWidth = 2.4;
   ctx.beginPath();
   ctx.moveTo(at.x - 10, at.y + 1);
@@ -209,17 +290,18 @@ export function drawSkater(
   ctx: CanvasRenderingContext2D,
   t: SkaterTransforms,
   pose: Pose,
-  options: { alpha?: number } = {},
+  options: { alpha?: number; theme?: PaperTheme } = {},
 ): void {
+  const theme = options.theme ?? PAPER_THEMES.lined;
   ctx.save();
   ctx.globalAlpha = options.alpha ?? 1;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  ctx.strokeStyle = INK;
+  ctx.strokeStyle = theme.ink;
 
   for (const w of [t.front, t.rear]) {
     const r = PHYSICS.wheel.radius;
-    ctx.fillStyle = PAPER;
+    ctx.fillStyle = theme.paper;
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.arc(w.x, w.y, r - 1, 0, Math.PI * 2);
@@ -265,7 +347,7 @@ export function drawSkater(
   ctx.lineTo(pose.handFront.x, pose.handFront.y);
   ctx.stroke();
 
-  ctx.fillStyle = PAPER;
+  ctx.fillStyle = theme.paper;
   ctx.lineWidth = 3.2;
   ctx.beginPath();
   ctx.arc(pose.head.x, pose.head.y, pose.headRadius, 0, Math.PI * 2);

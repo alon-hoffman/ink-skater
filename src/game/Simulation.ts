@@ -10,6 +10,8 @@ import { PHYSICS } from './physicsConfig';
 import { Skateboard, WHEEL_FRONT_LABEL, WHEEL_REAR_LABEL } from './Skateboard';
 import type { Transform } from './Skateboard';
 import { TERRAIN_LABEL, Terrain, computeDeathY } from './Terrain';
+import { TrickTracker } from './TrickTracker';
+import type { TrickEvent } from './TrickTracker';
 
 const { Engine, Events, Body, Bodies, Query } = Matter;
 
@@ -20,7 +22,9 @@ export interface SimHooks {
   onJump?: (charge01: number) => void;
   onLand?: (impact01: number) => void;
   onDeath?: (cause: DeathCause) => void;
-  onVictory?: (time: number) => void;
+  /** Finish time in seconds and the points banked in this run. */
+  onVictory?: (time: number, score: number) => void;
+  onTrick?: (event: TrickEvent) => void;
 }
 
 export interface RenderTransforms {
@@ -43,6 +47,7 @@ export class Simulation {
   readonly contacts = new ContactTracker();
   readonly jump = new JumpController();
   readonly pose = new PoseAnimator();
+  readonly tricks = new TrickTracker();
   readonly deathY: number;
 
   status: SimStatus = 'running';
@@ -151,6 +156,7 @@ export class Simulation {
     this.contacts.reset();
     this.jump.reset();
     this.pose.reset();
+    this.tricks.reset();
     this.time = 0;
     this.ticks = 0;
     this.status = 'running';
@@ -256,12 +262,36 @@ export class Simulation {
     this.time += DT;
     if (this.immunityTicks > 0) this.immunityTicks--;
 
-    if (this.checkVictory()) return;
-    if (sb.board.position.y > this.deathY) {
-      this.die('void');
+    const finished = this.victoryFired || this.touchesFlag();
+    let fatal: DeathCause | null = null;
+    if (!finished) {
+      if (sb.board.position.y > this.deathY) fatal = 'void';
+      else if (this.immunityTicks === 0 && this.headTouchesTerrain()) fatal = 'head';
+    }
+    // Tricks only bank on a tick the skater survives.
+    if (!fatal) this.updateTricks();
+    if (finished) {
+      this.finish();
       return;
     }
-    if (this.immunityTicks === 0 && this.headTouchesTerrain()) this.die('head');
+    if (fatal) this.die(fatal);
+  }
+
+  private updateTricks(): void {
+    const events = this.tricks.update({
+      angle: this.skateboard.board.angle,
+      frontGrounded: this.contacts.wheel('front').grounded,
+      rearGrounded: this.contacts.wheel('rear').grounded,
+      groundNormal: this.contacts.groundNormal,
+      speed: this.speed,
+      dt: DT,
+    });
+    for (const e of events) this.hooks.onTrick?.(e);
+  }
+
+  /** Points banked in the current run. */
+  get score(): number {
+    return this.tricks.score;
   }
 
   private applyJump(speed: number, charge01: number): void {
@@ -362,15 +392,18 @@ export class Simulation {
     return Query.collides(this.headSensor, this.terrain.activeBodies()).length > 0;
   }
 
-  private checkVictory(): boolean {
-    if (this.victoryFired) return true;
+  private touchesFlag(): boolean {
     Body.setPosition(this.headSensor, this.headWorld());
     const parts = [...this.skateboard.bodies, this.headSensor];
-    if (Query.collides(this.flagSensor, parts).length === 0) return false;
+    return Query.collides(this.flagSensor, parts).length > 0;
+  }
+
+  private finish(): void {
+    if (this.victoryFired && this.status === 'won') return;
+    for (const e of this.tricks.flush()) this.hooks.onTrick?.(e);
     this.victoryFired = true;
     this.status = 'won';
-    this.hooks.onVictory?.(this.time);
-    return true;
+    this.hooks.onVictory?.(this.time, this.tricks.score);
   }
 
   private die(cause: DeathCause): void {

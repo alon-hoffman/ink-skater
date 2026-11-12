@@ -14,6 +14,16 @@ interface Particle {
   size: number;
 }
 
+interface FloatingLabel {
+  text: string;
+  x: number;
+  y: number;
+  life: number;
+  maxLife: number;
+}
+
+const LABEL_FONT = "'Segoe Print', 'Bradley Hand', 'Chalkboard SE', 'Comic Sans MS', cursive";
+
 /** Tiny deterministic-ish pseudo random so effects look hand-scattered without Math.random in render math. */
 function makeRandom(seed: number): () => number {
   let s = seed >>> 0;
@@ -26,10 +36,17 @@ function makeRandom(seed: number): () => number {
 /** Purely cosmetic ink effects. Never feeds back into the simulation. */
 export class Effects {
   readonly particles: Particle[] = [];
+  readonly labels: FloatingLabel[] = [];
   private rand = makeRandom(1234);
 
   clear(): void {
     this.particles.length = 0;
+    this.labels.length = 0;
+  }
+
+  /** A short note that floats up from `at`, e.g. "+100 Flip". */
+  label(text: string, at: Vec2): void {
+    this.labels.push({ text, x: at.x, y: at.y, life: 1.3, maxLife: 1.3 });
   }
 
   dust(at: Vec2, strength01: number): void {
@@ -84,6 +101,13 @@ export class Effects {
   }
 
   update(dt: number): void {
+    for (let i = this.labels.length - 1; i >= 0; i--) {
+      const l = this.labels[i];
+      if (!l) continue;
+      l.life -= dt;
+      if (l.life <= 0) this.labels.splice(i, 1);
+      else l.y -= 38 * dt;
+    }
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
       if (!p) continue;
@@ -99,10 +123,10 @@ export class Effects {
     }
   }
 
-  draw(ctx: CanvasRenderingContext2D): void {
+  draw(ctx: CanvasRenderingContext2D, ink = '#25252b', accent = '#c0392b'): void {
     ctx.save();
     ctx.lineCap = 'round';
-    ctx.strokeStyle = '#25252b';
+    ctx.strokeStyle = ink;
     for (const p of this.particles) {
       const a = Math.max(0, p.life / p.maxLife);
       ctx.globalAlpha = a * 0.8;
@@ -114,7 +138,7 @@ export class Effects {
         ctx.moveTo(p.x, p.y);
         ctx.lineTo(p.x - Math.cos(ang) * len, p.y - Math.sin(ang) * len);
       } else if (p.kind === 'scribble') {
-        ctx.strokeStyle = '#c0392b';
+        ctx.strokeStyle = accent;
         ctx.moveTo(p.x, p.y);
         ctx.lineTo(p.x + Math.cos(p.angle) * p.size, p.y + Math.sin(p.angle) * p.size);
         ctx.lineTo(p.x - Math.sin(p.angle) * p.size * 0.6, p.y + Math.cos(p.angle) * p.size * 0.6);
@@ -126,7 +150,20 @@ export class Effects {
         }
       }
       ctx.stroke();
-      ctx.strokeStyle = '#25252b';
+      ctx.strokeStyle = ink;
+    }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = ink;
+    ctx.textAlign = 'center';
+    ctx.font = `bold 24px ${LABEL_FONT}`;
+    for (const l of this.labels) {
+      const a = Math.min(1, l.life / (l.maxLife * 0.35));
+      ctx.globalAlpha = a;
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+      ctx.strokeText(l.text, l.x, l.y);
+      ctx.fillStyle = accent;
+      ctx.fillText(l.text, l.x, l.y);
     }
     ctx.restore();
   }

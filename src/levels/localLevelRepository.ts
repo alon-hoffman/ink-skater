@@ -1,8 +1,11 @@
 import { parseLevel } from './levelSerialization';
+import { mergeProgress } from './objectives';
+import type { LevelProgress, ObjectiveResult } from './objectives';
 import type {
   Draft,
   DraftRepository,
   LevelRepository,
+  ProgressRepository,
   RecordSubmission,
   RecordsRepository,
   Repositories,
@@ -19,6 +22,7 @@ export const STORAGE_KEYS = {
   levels: 'inkskater.levels.v1',
   drafts: 'inkskater.drafts.v1',
   records: 'inkskater.records.v1',
+  progress: 'inkskater.progress.v1',
 } as const;
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
@@ -165,11 +169,49 @@ class LocalRecords implements RecordsRepository {
   }
 }
 
+function readProgress(storage: StorageLike): Record<string, LevelProgress> {
+  const data = readJson(storage, STORAGE_KEYS.progress);
+  const out: Record<string, LevelProgress> = {};
+  if (!isRecord(data)) return out;
+  for (const [id, raw] of Object.entries(data)) {
+    if (!isRecord(raw)) continue;
+    const score = raw.bestScore;
+    out[id] = {
+      finish: raw.finish === true,
+      time: raw.time === true,
+      score: raw.score === true,
+      bestScore: typeof score === 'number' && Number.isFinite(score) && score > 0 ? score : 0,
+    };
+  }
+  return out;
+}
+
+class LocalProgress implements ProgressRepository {
+  constructor(private readonly storage: StorageLike) {}
+
+  getAll(): Promise<Record<string, LevelProgress>> {
+    return Promise.resolve(readProgress(this.storage));
+  }
+
+  submit(levelId: string, result: ObjectiveResult, score: number): Promise<LevelProgress> {
+    const all = readProgress(this.storage);
+    const merged = mergeProgress(all[levelId], result, score);
+    all[levelId] = merged;
+    try {
+      writeJson(this.storage, STORAGE_KEYS.progress, all);
+    } catch {
+      /* storage full or blocked: the result is still reported for this session */
+    }
+    return Promise.resolve(merged);
+  }
+}
+
 export function createLocalRepositories(storage: StorageLike): Repositories {
   return {
     levels: new LocalLevels(storage),
     drafts: new LocalDrafts(storage),
     records: new LocalRecords(storage),
+    progress: new LocalProgress(storage),
   };
 }
 

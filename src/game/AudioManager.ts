@@ -156,6 +156,12 @@ export class AudioManager {
     });
   }
 
+  /** A bright two-note chime when a trick scores. */
+  trick(): void {
+    this.blip({ from: 660, to: 700, duration: 0.1, gain: 0.16 });
+    this.blip({ from: 880, to: 940, duration: 0.14, gain: 0.16, delay: 0.08 });
+  }
+
   click(): void {
     this.blip({ from: 520, to: 380, duration: 0.05, gain: 0.1, type: 'square' });
   }

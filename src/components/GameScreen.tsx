@@ -3,6 +3,8 @@ import { PORTRAIT_QUERY, useMediaQuery } from '../app/hooks';
 import { audio, repositories } from '../app/services';
 import { Game } from '../game/Game';
 import type { Level } from '../levels/levelTypes';
+import { evaluateObjectives, formatLimit, knownProgress } from '../levels/objectives';
+import { worldOfLevel } from '../levels/worlds';
 import { CompletionScreen } from './CompletionScreen';
 import type { CompletionInfo } from './CompletionScreen';
 import { PauseMenu } from './PauseMenu';
@@ -16,7 +18,7 @@ export interface GameScreenProps {
   /** Play mode only: go to the next level when there is one. */
   onNext?: (() => void) | undefined;
   /** Playtest only: called once when the level is completed, before the overlay shows. */
-  onPlaytestComplete?: ((time: number) => void) | undefined;
+  onPlaytestComplete?: ((time: number, score: number) => void) | undefined;
   /** Playtest only: whether the completion validated the level (shown on the overlay). */
   validated?: boolean | undefined;
 }
@@ -26,6 +28,10 @@ export function GameScreen(props: GameScreenProps): React.JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const timeRef = useRef<HTMLSpanElement>(null);
   const chargeRef = useRef<HTMLDivElement>(null);
+  const scoreRef = useRef<HTMLSpanElement>(null);
+  const trickRef = useRef<HTMLSpanElement>(null);
+  const objTimeRef = useRef<HTMLLIElement>(null);
+  const objScoreRef = useRef<HTMLLIElement>(null);
   const leftRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Game | null>(null);
@@ -46,25 +52,54 @@ export function GameScreen(props: GameScreenProps): React.JSX.Element {
       canvas,
       level,
       audio,
-      hud: { time: timeRef.current, charge: chargeRef.current },
+      hud: {
+        time: timeRef.current,
+        charge: chargeRef.current,
+        score: scoreRef.current,
+        trick: trickRef.current,
+        objTime: objTimeRef.current,
+        objScore: objScoreRef.current,
+      },
       onPauseChange: setPaused,
-      onComplete: (time) => {
+      onComplete: ({ time, score }) => {
         const p = propsRef.current;
         if (p.mode === 'playtest') {
-          p.onPlaytestComplete?.(time);
-          setCompletion({ kind: 'playtest', time });
+          p.onPlaytestComplete?.(time, score);
+          setCompletion({ kind: 'playtest', time, score });
           return;
         }
-        void repositories.records.submit(level.id, time).then(
-          (result) =>
+        const result = evaluateObjectives(level.objectives, time, score);
+        const targets = level.objectives;
+        void (async () => {
+          try {
+            const saved = (await repositories.progress.getAll())[level.id];
+            const bestBefore = await repositories.records.getBest(level.id);
+            const before = knownProgress(targets, bestBefore, saved);
+            const record = await repositories.records.submit(level.id, time);
+            const progress = targets
+              ? await repositories.progress.submit(level.id, result, score)
+              : null;
             setCompletion({
               kind: 'play',
               time,
-              best: result.best,
-              isNewRecord: result.isNewRecord,
-            }),
-          () => setCompletion({ kind: 'play', time, best: time, isNewRecord: false }),
-        );
+              score,
+              best: record.best,
+              isNewRecord: record.isNewRecord,
+              objectives: targets && progress ? { targets, result, progress, before } : null,
+            });
+          } catch {
+            setCompletion({
+              kind: 'play',
+              time,
+              score,
+              best: time,
+              isNewRecord: false,
+              objectives: targets
+                ? { targets, result, progress: { ...result, bestScore: score }, before: undefined }
+                : null,
+            });
+          }
+        })();
       },
     });
     game.attachTouchZones(left, right);
@@ -97,7 +132,7 @@ export function GameScreen(props: GameScreenProps): React.JSX.Element {
   };
 
   return (
-    <div className="game-screen">
+    <div className="game-screen" data-paper={worldOfLevel(level.id)?.paper ?? 'lined'}>
       <canvas ref={canvasRef} className="game-canvas" />
       <div className="touch-zones" aria-hidden="true">
         <div ref={leftRef} className="touch-zone touch-left">
@@ -111,10 +146,32 @@ export function GameScreen(props: GameScreenProps): React.JSX.Element {
         <div className="hud-left">
           <span className="hud-level">{level.name}</span>
           {mode === 'playtest' && <span className="badge">playtest</span>}
+          {level.objectives && (
+            <ul className="hud-objectives" aria-label="Objectives">
+              <li className="hud-obj">
+                <span className="hud-obj-box" aria-hidden="true" />
+                Reach the flag
+              </li>
+              <li ref={objTimeRef} className="hud-obj" data-state="live">
+                <span className="hud-obj-box" aria-hidden="true" />
+                Under {formatLimit(level.objectives.timeLimit)}
+              </li>
+              <li ref={objScoreRef} className="hud-obj" data-state="live">
+                <span className="hud-obj-box" aria-hidden="true" />
+                {level.objectives.scoreTarget}+ points
+              </li>
+            </ul>
+          )}
         </div>
         <div className="hud-center">
           <span ref={timeRef} className="hud-time">
             0:00.00
+          </span>
+          <span className="hud-score-line">
+            <span ref={scoreRef} className="hud-score">
+              Score 0
+            </span>
+            <span ref={trickRef} className="hud-trick" />
           </span>
           <div className="charge-track" title="Jump charge">
             <div ref={chargeRef} className="charge-fill" />
@@ -138,8 +195,8 @@ export function GameScreen(props: GameScreenProps): React.JSX.Element {
         </div>
       </header>
       <p className="hud-hint">
-        Hold Space (or both sides) to charge a jump · release to launch · press Z (or swipe) to
-        turn around
+        Hold Space to charge a jump · Z turns around · spin in the air for flips · ride on one wheel
+        for manuals
       </p>
 
       {paused && !completion && !portrait && (
