@@ -7,6 +7,7 @@ const { Bodies, Body, Constraint, Composite } = Matter;
 export const BOARD_LABEL = 'board';
 export const WHEEL_FRONT_LABEL = 'wheelFront';
 export const WHEEL_REAR_LABEL = 'wheelRear';
+export const RIDER_LABEL = 'rider';
 const BOARD_CATEGORY = 0x0002;
 
 export interface Transform {
@@ -24,6 +25,8 @@ export class Skateboard {
   readonly board: Matter.Body;
   readonly wheelFront: Matter.Body;
   readonly wheelRear: Matter.Body;
+  /** Non-colliding mass above the deck that moves the centre of mass off the board; null when disabled. */
+  private readonly rider: Matter.Body | null;
   private readonly constraints: Matter.Constraint[];
 
   constructor(private readonly world: Matter.World) {
@@ -68,11 +71,40 @@ export class Skateboard {
       });
     this.constraints = [pin(this.wheelFront, w.offsetX), pin(this.wheelRear, -w.offsetX)];
 
-    Composite.add(world, [this.board, this.wheelFront, this.wheelRear, ...this.constraints]);
+    const r = PHYSICS.rider;
+    if (r.mass > 0) {
+      this.rider = Bodies.circle(0, -r.height, 4, {
+        label: RIDER_LABEL,
+        isSensor: true,
+        frictionAir: 0,
+        collisionFilter: { ...filter, mask: 0 },
+      });
+      Body.setMass(this.rider, r.mass);
+      // Two pins a body-width apart make the connection rigid (one pin would let it swing).
+      for (const x of [-r.halfWidth, r.halfWidth]) {
+        this.constraints.push(
+          Constraint.create({
+            bodyA: this.board,
+            pointA: { x, y: -r.height },
+            bodyB: this.rider,
+            pointB: { x, y: 0 },
+            length: 0,
+            stiffness: 1,
+            damping: 0,
+          }),
+        );
+      }
+    } else {
+      this.rider = null;
+    }
+
+    Composite.add(world, [...this.bodies, ...this.constraints]);
   }
 
   get bodies(): Matter.Body[] {
-    return [this.board, this.wheelFront, this.wheelRear];
+    return this.rider
+      ? [this.board, this.wheelFront, this.wheelRear, this.rider]
+      : [this.board, this.wheelFront, this.wheelRear];
   }
 
   /** Place the assembly at rest with the board centre at `spawn`. */
@@ -90,6 +122,7 @@ export class Skateboard {
     place(this.board, spawn.x, spawn.y);
     place(this.wheelFront, spawn.x + w.offsetX, spawn.y + w.offsetY);
     place(this.wheelRear, spawn.x - w.offsetX, spawn.y + w.offsetY);
+    if (this.rider) place(this.rider, spawn.x, spawn.y - PHYSICS.rider.height);
   }
 
   centerOfMass(): Vec2 {
@@ -175,11 +208,6 @@ export class Skateboard {
   }
 
   dispose(): void {
-    Composite.remove(this.world, [
-      this.board,
-      this.wheelFront,
-      this.wheelRear,
-      ...this.constraints,
-    ]);
+    Composite.remove(this.world, [...this.bodies, ...this.constraints]);
   }
 }

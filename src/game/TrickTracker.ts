@@ -4,14 +4,15 @@
  * - Flip: a full spin (about 360 degrees, either direction) while no wheel touches the ground.
  *   It scores when you land. Extra spins in the same jump are worth more each.
  * - Manual: riding on exactly one wheel for at least `manualMinSeconds`. It scores when the manual ends.
+ *   A short hop (up to `manualAirGraceSeconds`) between one-wheel stretches keeps it going as one manual.
  */
 
 export const TRICK = {
   /** Points for one flip. Spin counts: 1 -> 100, 2 -> 300, 3 -> 600 (n * (n + 1) / 2 * flipPoints). */
-  flipPoints: 100,
+  flipPoints: 50,
   /** A spin this close to a whole turn counts (0.8 of a turn is a flip). */
   flipTurnSlack: 0.2,
-  manualPointsPerSecond: 50,
+  manualPointsPerSecond: 80,
   manualMinSeconds: 0.5,
   /** Slowest speed (px/s) at which a one-wheel ride still counts as a manual. */
   manualMinSpeed: 60,
@@ -19,6 +20,8 @@ export const TRICK = {
   manualMaxTilt: 0.95,
   /** Ticks a manual may be interrupted (wheel flicker) without ending. */
   manualGapTicks: 6,
+  /** Seconds airborne a manual survives; landing on one wheel again within it continues the manual. */
+  manualAirGraceSeconds: 1.5,
 } as const;
 
 export type TrickKind = 'flip' | 'manual';
@@ -67,8 +70,10 @@ export class TrickTracker {
   private lastAngle = 0;
   private haveAngle = false;
   private manualGap = 0;
+  private manualAir = 0;
 
   reset(): void {
+    this.manualAir = 0;
     this.score = 0;
     this.manualSeconds = 0;
     this.wasAirborne = true;
@@ -126,12 +131,20 @@ export class TrickTracker {
     if (valid) {
       this.manualSeconds += input.dt;
       this.manualGap = 0;
+      this.manualAir = 0;
       return;
     }
     if (this.manualSeconds === 0) return;
-    // Airborne straight out of a manual (an ollie off the lip) still banks it, with no grace wait.
+    if (airborne) {
+      // Hopping off a lip keeps the manual alive: land on one wheel again within the grace time and
+      // it carries on (air time itself isn't counted). Stay up too long and it banks.
+      this.manualAir += input.dt;
+      if (this.manualAir > TRICK.manualAirGraceSeconds) this.endManual(events);
+      return;
+    }
+    // Both wheels down (or a wheel flicker): only a short grace before the manual is over.
     this.manualGap++;
-    if (airborne || this.manualGap > TRICK.manualGapTicks) this.endManual(events);
+    if (this.manualGap > TRICK.manualGapTicks) this.endManual(events);
   }
 
   private endManual(events: TrickEvent[]): void {
@@ -142,6 +155,7 @@ export class TrickTracker {
     }
     this.manualSeconds = 0;
     this.manualGap = 0;
+    this.manualAir = 0;
   }
 }
 

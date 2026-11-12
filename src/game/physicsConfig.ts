@@ -14,8 +14,13 @@ export const PHYSICS = {
     mass: 2,
     friction: 0.9,
     frictionStatic: 0.6,
-    restitution: 0.02,
+    restitution: 0.00,
   },
+  /**
+   * Rider body: a non-colliding mass held rigidly above the deck so the centre of mass sits over the board
+   * instead of on it. Higher/heavier = tips over and over-rotates more easily. Mass 0 disables it.
+   */
+  rider: { mass: 3.5, height: 15, halfWidth: 8 },
   terrain: { halfThickness: 3.5, friction: 0.9, columnWidth: 400, activeColumns: 2 },
 
   /** Grounded propulsion: acceleration (px/s^2) that fades out as speed nears `cruiseSpeed`. */
@@ -27,7 +32,7 @@ export const PHYSICS = {
    */
   rollingResistance: -0.001,
   /** Speed cap in px/s; keeps collisions stable. */
-  maxSpeed: 1800,
+  maxSpeed: 2000,
 
   /** Tilt angular acceleration (rad/s^2) and angular speed cap (rad/s). */
   tiltAcceleration: 18,
@@ -45,7 +50,7 @@ export const PHYSICS = {
     maxSpeed: 780,
     /** Weight of world-up against the contact normal in the jump direction (1 - this goes to the normal). */
     worldUpWeight: 0.7,
-    cooldownSeconds: 0.15,
+    cooldownSeconds: 0.10,
   },
   /** Ticks a wheel stays "grounded" after its last contact (anti-flicker). */
   contactGraceTicks: 1,

@@ -121,10 +121,21 @@ describe('manuals', () => {
     expect(t.score).toBeGreaterThan(40);
   });
 
-  it('jumping off a manual banks it', () => {
+  it('a long jump off a manual banks it', () => {
     const t = new TrickTracker();
     ride(t, 1);
-    t.update(air(0.3));
+    for (let i = 0; i < Math.round((TRICK.manualAirGraceSeconds + 0.2) * 60); i++) t.update(air(0.3));
     expect(t.score).toBeGreaterThan(40);
+  });
+
+  it('a short hop between one-wheel stretches is one combined manual', () => {
+    const t = new TrickTracker();
+    ride(t, 1);
+    for (let i = 0; i < 30; i++) t.update(air(0.3));
+    expect(t.score).toBe(0);
+    ride(t, 2);
+    for (let i = 0; i < 10; i++) t.update(ground(0));
+    expect(t.score).toBeGreaterThanOrEqual(145);
+    expect(t.score).toBeLessThanOrEqual(155);
   });
 });
