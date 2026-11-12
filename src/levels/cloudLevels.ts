@@ -61,8 +61,11 @@ export class CloudLevels {
   constructor(
     private readonly storage: StorageLike | null,
     private readonly fetchFn: FetchLike = (input, init) => fetch(input, init),
+    defaultUrl = '',
   ) {
     this.config = loadCloudConfig(storage);
+    // A URL saved on this device wins; otherwise use the one built into the game.
+    if (this.config.url === '') this.config = { url: defaultUrl };
     this.ownerKey = loadOwnerKey(storage);
   }
 

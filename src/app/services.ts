@@ -17,5 +17,8 @@ function pickStorage(): StorageLike {
 
 const storage = pickStorage();
 export const repositories = createLocalRepositories(storage);
-export const cloud = new CloudLevels(storage);
+/** The shared Google Apps Script web app that every player's game connects to by default. */
+export const DEFAULT_CLOUD_URL =
+  'https://script.google.com/macros/s/AKfycbxx5QkAHNTpf1o5W_uUOT1kq1SLkY49JQD-jXCe-CzlQCm4lA3cXxBAcyiARk6Ehp6Xjg/exec';
+export const cloud = new CloudLevels(storage, undefined, DEFAULT_CLOUD_URL);
 export const audio = new AudioManager();
