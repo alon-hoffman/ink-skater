@@ -20,7 +20,7 @@ export const PHYSICS = {
    * Rider body: a non-colliding mass held rigidly above the deck so the centre of mass sits over the board
    * instead of on it. Higher/heavier = tips over and over-rotates more easily. Mass 0 disables it.
    */
-  rider: { mass: 3.5, height: 15, halfWidth: 8 },
+  rider: { mass: 4.5, height: 18, halfWidth: 8 },
   terrain: { halfThickness: 3.5, friction: 0.9, columnWidth: 400, activeColumns: 2 },
 
   /** Grounded propulsion: acceleration (px/s^2) that fades out as speed nears `cruiseSpeed`. */
@@ -42,7 +42,7 @@ export const PHYSICS = {
   maxAngularSpeed: 10,
   /** Per-tick angular velocity damping on the ground (air has none: angular momentum persists). */
   groundAngularDamping: 0.015,
-  airAngularDamping: 0,
+  airAngularDamping: 0.018,
 
   jump: {
     maxChargeSeconds: 0.7,
