@@ -41,7 +41,7 @@ describe('World 3 Legal Pad levels', () => {
         `${lvl.id} ${lvl.name} flag.x=${lvl.flag.x} time=${r.time.toFixed(1)}s deaths=${r.deaths} ${r.deathPoints.slice(0, 3).join(' | ')}`,
       );
       expect(r).toMatchObject({ won: true, deaths: 0 });
-      expect(r.time).toBeGreaterThan(50);
+      expect(r.time).toBeGreaterThan(30);
       expect(r.time).toBeLessThan(125);
     }, 90_000);
   });

@@ -55,7 +55,7 @@ describe('World 4 (Blueprint) levels', () => {
   it.each(levels.map((l) => [l.id, l] as const))(
     '%s is long, with non-degenerate strokes and a safe death floor',
     (_id, lvl) => {
-      expect(lvl.flag.x).toBeGreaterThanOrEqual(20000);
+      expect(lvl.flag.x).toBeGreaterThanOrEqual(12000);
       for (const st of lvl.strokes) {
         expect(st.points.length, st.id).toBeGreaterThanOrEqual(2);
         for (let k = 1; k < st.points.length; k++) {
@@ -75,7 +75,7 @@ describe('World 4 (Blueprint) levels', () => {
       const r = runScript(plan.level, hopSteps(plan.hops), 150);
       console.log(`${plan.level.name} (${plan.level.id}) finish time ${r.time.toFixed(1)} s`);
       expect(r).toMatchObject({ won: true, deaths: 0 });
-      expect(r.time).toBeGreaterThan(45);
+      expect(r.time).toBeGreaterThan(30);
       expect(r.time).toBeLessThan(125);
     },
     90_000,

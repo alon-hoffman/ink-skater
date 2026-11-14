@@ -170,83 +170,81 @@ function steppingStones(ch: readonly number[]): GraphCourse {
   // Flight one: the original widening ladder, gaps 160 -> 380.
   c.run(1120).gap(160, 30);
   c.run(540, 30).gap(200, 30);
-  c.run(600, 60).gap(240, 30);
+  c.run(560, 60).gap(240, 30);
   c.run(560, 90).gap(290, 60);
-  c.run(610, 100).gap(340, 70);
-  c.run(660, 110).gap(380, 80);
+  c.run(600, 100).gap(340, 70);
+  c.run(650, 110).gap(380, 80);
   // A long slow stretch for manuals, climbing back up.
-  c.run(900, 50).ramp(900, -230).run(700);
+  c.run(350, 50).ramp(900, -230).run(500);
   // Flight two: flat stones, gaps widening gently.
-  c.gap(190, 10).run(900, 10);
-  c.gap(205, 10).run(900, 10);
-  c.gap(220, 10).run(950, 10);
-  c.gap(230, 10).run(1000, 10);
-  c.gap(235, 10).run(1000);
-  c.run(300);
+  c.gap(190, 10).run(600, 10);
+  c.gap(205, 10).run(600, 10);
+  c.gap(220, 10).run(620, 10);
+  c.gap(230, 10).run(650, 10);
+  c.gap(235, 10).run(700);
   return assemble('builtin-17', 'l17-', 'Stepping Stones', 'Medium', c, 0);
 }
 
 /** builtin-28: rule-straight rhythm sections, every gap the same width within a set, with long flats between. */
 function rulerMarks(ch: readonly number[]): GraphCourse {
   const c = new Course(-420, 0, ch);
-  c.run(1300);
-  c.rhythm(4, 900, 170);
-  c.run(900);
-  c.rhythm(4, 900, 190);
-  c.run(800).swell(600, 0, 14).run(300);
-  c.rhythm(3, 950, 205, 14);
-  c.run(1500);
+  c.run(1100);
+  c.rhythm(4, 600, 170);
+  c.run(400);
+  c.rhythm(4, 600, 190);
+  c.run(300).swell(600, 0, 14).run(300);
+  c.rhythm(3, 650, 205, 14);
+  c.run(700);
   return assemble('builtin-28', 'g28-', 'Ruler Marks', 'Medium', c, 0);
 }
 
 /** builtin-30: long manual-friendly flats alternate with tight clusters of three gaps. */
 function ledgerLines(ch: readonly number[]): GraphCourse {
   const c = new Course(-420, 0, ch);
-  c.run(1600);
+  c.run(1100);
   // Cluster one.
-  c.rhythm(3, 900, 190, 6);
-  c.run(1000).swell(700, 20, 16).run(500);
+  c.rhythm(3, 600, 190, 6);
+  c.run(400).swell(700, 20, 16).run(300);
   // Cluster two: widening.
-  c.gap(170, 20).run(900).gap(190, 20).run(900).gap(210, 20);
-  c.run(1500);
+  c.gap(170, 20).run(600).gap(190, 20).run(600).gap(210, 20);
+  c.run(500);
   // Cluster three: drops, then a long climb back.
-  c.gap(200, 60).run(950).gap(220, 60).run(950).gap(240, 60);
-  c.run(900).ramp(1000, -210).run(700);
+  c.gap(200, 60).run(650).gap(220, 60).run(650).gap(240, 60);
+  c.run(300).ramp(1000, -210).run(400);
   // Cluster four: tight equal.
-  c.rhythm(3, 900, 215);
-  c.run(1100).swell(800, -40, 20).run(500);
-  c.run(300);
+  c.rhythm(3, 600, 215);
+  c.run(300).swell(800, -40, 20).run(500);
   return assemble('builtin-30', 'g30-', 'Ledger Lines', 'Hard', c, 0);
 }
 
 /** builtin-29: each lipped launch lands on a steep downslope; the shelves step back up between drops. */
 function cliffNotes(ch: readonly number[]): GraphCourse {
   const c = new Course(-420, 0, ch);
-  c.run(1500);
+  c.run(1100);
   for (let i = 0; i < 5; i++) {
     // A ledge drop onto a steep face that eases out flat, then a bowl-shaped dip and a long gentle climb back.
     const face = 150 + i * 15;
     c.gap(190 + i * 7, 60 + i * 10)
       .ease(360 + i * 40, face)
-      .run(500);
-    c.ramp(Math.round((face + 60 + i * 10) * 4.6), -(face + 60 + i * 10)).run(600);
-    c.swell(600, 0, 12).run(300);
+      .run(350);
+    c.ramp(Math.round((face + 60 + i * 10) * 4.6), -(face + 60 + i * 10)).run(350);
+    c.swell(600, 0, 12).run(250);
   }
-  c.gap(215, 100).ease(600, 200).run(1600);
+  c.gap(215, 100).ease(600, 200).run(700);
   return assemble('builtin-29', 'g29-', 'Cliff Notes', 'Hard', c, 0);
 }
 
 /** builtin-31: down-then-up canyons; speed from the descent carries long jumps across the bottom. */
 function axisCrossing(ch: readonly number[]): GraphCourse {
   const c = new Course(-420, 0, ch);
-  c.run(1400);
+  c.run(1100);
   for (let i = 0; i < 5; i++) {
     // A deep V-shaped canyon, then a rim-to-rim jump back on level ground.
-    c.dip(220 + i * 30, 700 + i * 60, 260).run(700);
-    c.gap(200 + i * 8, 40 + i * 10).run(900);
-    c.swell(480, 0, 12).run(300);
+    c.dip(220 + i * 30, 700 + i * 60, 260).run(400);
+    c.gap(200 + i * 8, 40 + i * 10).run(600);
+    c.swell(480, 0, 12).run(250);
   }
-  c.run(1500);
+  c.run(700);
   return assemble('builtin-31', 'g31-', 'Axis Crossing', 'Hard', c, 0);
 }
 
@@ -290,7 +288,7 @@ function canyonRun(ch: readonly number[]): GraphCourse {
   const headAts = [1892, 3972, 5692, 6062, 6432, 6802, 7172, 8842, 9992, 10382, 10772, 11162];
   const headLands = [2300, 4500, 5820, 6190, 6560, 6930, 7300, 9130, 10140, 10530, 10920, 11310];
   const c = new Course(11310, 350, ch.slice(headAts.length));
-  c.run(1000);
+  c.run(600);
   // Three more canyons, each with a deeper plunge and a wider crossing.
   for (let i = 0; i < 3; i++) {
     const depth = 250 + i * 50;
@@ -299,9 +297,9 @@ function canyonRun(ch: readonly number[]): GraphCourse {
       .ramp(Math.round(depth * 4.4), -depth)
       .run(360);
     c.rhythm(3, 260 + i * 30, 130 + i * 25);
-    if (i < 2) c.run(500).swell(700, 0, 14).run(300);
+    if (i < 2) c.run(250).swell(700, 0, 14).run(200);
   }
-  c.run(1000);
+  c.run(600);
   const base = assemble('builtin-18', 'l18-', 'Canyon Run', 'Expert', c, -500, head);
   const jumps = [...headAts.map((at, i) => ({ at, charge: ch[i] ?? 0.05 })), ...c.plan()];
   return { level: base.level, jumps, lands: [...headLands, ...c.lands] };

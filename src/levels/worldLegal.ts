@@ -241,106 +241,106 @@ function make(
 /** Margin Walk: a gentle intro. Open flats, roofed hops, a duck-under, then two hairpins. */
 function marginWalk(): LegalPlan {
   return make('builtin-32', 'Margin Walk', 'Medium', 'lg32-', (b) => {
-    b.flat(1500);
-    b.tunnel(1200);
+    b.flat(900);
+    b.tunnel(750);
     b.flat(300);
     b.corridor([500, 500, 500], 100, 500);
-    b.flat(900);
+    b.flat(450);
     b.slabLeap(400);
-    b.flat(900);
+    b.flat(450);
     b.dropForward();
-    b.flat(1000);
-    b.hairpin(300, 800);
-    b.flat(900);
+    b.flat(550);
+    b.hairpin(300, 500);
+    b.flat(450);
     b.corridor([500, 550], 100, 400);
-    b.flat(1000);
+    b.flat(550);
     b.dropForward();
-    b.flat(1000);
+    b.flat(550);
     b.crawl(450);
-    b.flat(1000);
-    return b.finalTurn(1000);
+    b.flat(700);
+    return b.finalTurn(600);
   });
 }
 
 /** Staple Alley: stairs up, then long low corridors of uneven hops. */
 function stapleAlley(): LegalPlan {
   return make('builtin-33', 'Staple Alley', 'Medium', 'lg33-', (b) => {
-    b.flat(1100);
+    b.flat(900);
     b.stairs(3);
-    b.flat(900);
+    b.flat(450);
     b.corridor([380, 560, 420, 600, 450], [100, 90, 110, 100, 95], 500);
-    b.flat(800);
+    b.flat(450);
     b.dropForward();
-    b.flat(1000);
+    b.flat(550);
     b.corridor([450, 450, 520], 105, 400);
-    b.flat(900);
+    b.flat(450);
     b.stairs(2, 90, 500);
-    b.flat(800);
-    b.tunnel(1000);
+    b.flat(450);
+    b.tunnel(750);
     b.flat(300);
     b.dropForward();
-    b.flat(900);
-    b.hairpin(300, 700);
-    b.flat(900);
+    b.flat(450);
+    b.hairpin(300, 500);
+    b.flat(450);
     b.corridor([500, 450, 500], 100, 400);
-    b.flat(1100);
-    return b.finalTurn(900);
+    b.flat(700);
+    return b.finalTurn(600);
   });
 }
 
 /** Paper Clip: three stacked hairpins separated by long open runs. */
 function paperClip(): LegalPlan {
   return make('builtin-34', 'Paper Clip', 'Hard', 'lg34-', (b) => {
-    b.flat(1300);
-    b.dropForward();
-    b.flat(1300);
-    b.hairpin(300, 800);
-    b.flat(1500);
-    b.dropForward();
-    b.flat(1200);
-    b.hairpin(300, 700);
-    b.flat(1500);
-    b.dropForward();
-    b.flat(1200);
-    b.hairpin(300, 800);
-    b.flat(1400);
-    b.corridor([500, 500], 100, 400);
     b.flat(900);
     b.dropForward();
-    b.flat(1000);
-    return b.finalTurn(1000);
+    b.flat(650);
+    b.hairpin(300, 500);
+    b.flat(650);
+    b.dropForward();
+    b.flat(550);
+    b.hairpin(300, 500);
+    b.flat(650);
+    b.dropForward();
+    b.flat(550);
+    b.hairpin(300, 500);
+    b.flat(650);
+    b.corridor([500, 500], 100, 400);
+    b.flat(450);
+    b.dropForward();
+    b.flat(700);
+    return b.finalTurn(600);
   });
 }
 
 /** Fine Print: duck-under slabs of growing length, linked by hops and hairpins. */
 function finePrint(): LegalPlan {
   return make('builtin-35', 'Fine Print', 'Hard', 'lg35-', (b) => {
-    b.flat(1000);
+    b.flat(900);
     b.slabLeap(300);
-    b.flat(800);
+    b.flat(650);
     b.corridor([450, 450], 100, 300);
     b.slabLeap(450);
-    b.flat(900);
+    b.flat(450);
     b.dropForward();
-    b.flat(1000);
-    b.hairpin(300, 700);
-    b.flat(700);
+    b.flat(550);
+    b.hairpin(300, 500);
+    b.flat(650);
     b.corridor([420, 500, 420], 105, 300);
     b.slabLeap(550);
-    b.flat(1100);
+    b.flat(650);
     b.crawl(550);
-    b.flat(700);
+    b.flat(400);
     b.dropForward();
-    b.flat(1000);
-    b.hairpin(300, 800);
-    b.flat(800);
+    b.flat(550);
+    b.hairpin(300, 500);
+    b.flat(650);
     b.slabLeap(500, 200);
-    b.flat(800);
+    b.flat(650);
     b.corridor([450, 450, 450], 100, 300);
-    b.flat(1000);
+    b.flat(550);
     b.dropForward();
-    b.flat(900);
-    return b.finalTurn(900);
+    b.flat(700);
+    return b.finalTurn(600);
   });
 }
 
@@ -349,70 +349,70 @@ function binderRings(): LegalPlan {
   return make('builtin-36', 'Binder Rings', 'Hard', 'lg36-', (b) => {
     b.flat(900);
     b.stairs(2);
-    b.flat(800);
+    b.flat(450);
     b.corridor([500, 450, 500], 100, 400);
-    b.flat(800);
+    b.flat(450);
     b.stairs(3, 80, 500);
-    b.flat(1000);
+    b.flat(550);
     b.dropForward();
-    b.flat(1000);
-    b.hairpin(300, 700);
-    b.flat(700);
+    b.flat(550);
+    b.hairpin(300, 500);
+    b.flat(400);
     b.slabLeap(400);
-    b.flat(800);
+    b.flat(450);
     b.dropForward();
-    b.flat(1100);
-    b.hairpin(300, 800);
-    b.flat(1000);
-    b.tunnel(1100);
+    b.flat(550);
+    b.hairpin(300, 500);
+    b.flat(550);
+    b.tunnel(750);
     b.flat(300);
     b.corridor([450, 500, 450, 500], [100, 105, 100, 95], 400);
-    b.flat(900);
+    b.flat(450);
     b.dropForward();
-    b.flat(1000);
-    b.hairpin(300, 800);
-    b.flat(900);
+    b.flat(550);
+    b.hairpin(300, 500);
+    b.flat(450);
     b.crawl(500);
-    b.flat(1000);
+    b.flat(550);
     b.dropForward();
-    b.flat(1000);
-    return b.finalTurn(900);
+    b.flat(700);
+    return b.finalTurn(600);
   });
 }
 
 /** Long Tunnel (finale): the Gauntlet twice over, five tiers deep, with four turn-arounds. */
 function longTunnel(): LegalPlan {
   return make('builtin-19', 'Long Tunnel', 'Expert', 'l19-', (b) => {
-    b.flat(1020);
+    b.flat(900);
     b.stairs(2);
-    b.flat(650);
+    b.flat(400);
     b.corridor([600, 560, 500], [100, 100, 105], 300);
     b.flat(500);
     b.slabLeap(350);
-    b.flat(1000);
+    b.flat(550);
     b.dropForward();
-    b.flat(1100);
-    b.hairpin(300, 800);
-    b.flat(1000);
+    b.flat(550);
+    b.hairpin(300, 500);
+    b.flat(550);
     b.corridor([600, 500, 500, 600, 500], [100, 110, 100, 105, 100], 300);
     b.slabLeap(400);
-    b.flat(900);
+    b.flat(450);
     b.dropForward();
-    b.flat(900);
-    b.hairpin(300, 800);
-    b.flat(1000);
-    b.tunnel(1200);
+    b.flat(450);
+    b.hairpin(300, 500);
+    b.flat(550);
+    b.tunnel(750);
     b.flat(300);
     b.corridor([500, 450, 550], 100, 300);
     b.slabLeap(450);
-    b.flat(900);
+    b.flat(450);
     b.dropForward();
-    b.flat(1000);
-    b.hairpin(300, 900);
-    b.flat(1000);
+    b.flat(550);
+    b.hairpin(300, 500);
+    b.flat(550);
     b.crawl(500);
-    b.flat(1300);
-    return b.finalTurn(900);
+    b.flat(700);
+    return b.finalTurn(600);
   });
 }
 

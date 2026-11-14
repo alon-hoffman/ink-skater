@@ -110,9 +110,9 @@ export class Course {
   }
 
   /** Gentle long climb up to height `y` (slope stays under 0.2 so a cruising rider keeps moving). */
-  climbTo(y: number, factor = 9) {
+  climbTo(y: number, factor = 5.5) {
     const dy = y - this.y;
-    if (dy < 0) this.slope(Math.max(1500, -dy * factor), dy);
+    if (dy < 0) this.slope(Math.max(1000, -dy * factor), dy);
     return this;
   }
 
@@ -168,9 +168,9 @@ function launchPad(): { level: Level; hops: number[] } {
   const c = new Course('l20-', pt(8300, 560), 'l20-land2', land2);
   const baseY = 100;
   c.climbTo(baseY).flat(400).slope(800, 260).flat(250);
-  c.kick(520, 130).gap(200, 90).landing(800, 300).flat(800);
+  c.kick(520, 130).gap(200, 90).landing(800, 300).flat(500);
   c.climbTo(baseY).flat(400).slope(900, 300).flat(250);
-  c.kick(600, 150).gap(250, 110).landing(900, 360).flat(1400);
+  c.kick(600, 150).gap(250, 110).landing(900, 360).flat(700);
   const flatEnd = c.x;
   const level = builtInLevel({
     id: 'builtin-20',
@@ -230,7 +230,7 @@ function halfpipeHop(): Plan {
     c.climbTo(climbBack).flat(500);
     c.bowl({ r, th0: th, th1: 0.9, lead: 700, at: 'lead' });
     pipeChain(c, r, drop, w, n);
-    c.gap(400, 18).landing(1100, 260).flat(800);
+    c.gap(400, 18).landing(1100, 260).flat(500);
   };
   block(450, 290, 500, 2, 500);
   block(500, 320, 540, 3, 900);
@@ -286,11 +286,11 @@ function skyMarathon(): Plan {
   const c = new Course('l22-', pt(15000, 1130), 'l22-finish', finish);
   // Part 2: climb, rhythm gaps, a ski jump, a half-pipe chain, a launch chain and the grand finale gap.
   c.flat(700).rhythm(3, 450, 170, 60).flat(500);
-  c.slope(700, 220).flat(250).kick(700, 200).gap(450, 200).landing(1100, 300).flat(900);
+  c.slope(700, 220).flat(250).kick(700, 200).gap(450, 200).landing(1100, 300).flat(600);
   c.climbTo(1000).flat(500).slope(1100, 450).flat(250);
   c.kick(500, 100).gap(250, 90).landing(900, 300).flat(600);
   c.climbTo(1000).flat(500).slope(1500, 650).flat(300);
-  c.kick(800, 200).gap(500, 220).landing(1400, 450).flat(1600);
+  c.kick(800, 200).gap(500, 220).landing(1400, 450).flat(700);
   const flatEnd = c.x;
   const level = builtInLevel({
     id: 'builtin-22',
@@ -314,7 +314,7 @@ function skyMarathon(): Plan {
 /** Ski Jump Chain: five ski jumps down a mountain, each bigger, each followed by a climb back up. */
 function skiJumpChain(): Plan {
   const c = new Course('b37-', pt(-420, -400));
-  c.flat(900);
+  c.flat(600);
   const jumps = [
     { down: 600, rise: 90, gap: 220, land: 300 },
     { down: 650, rise: 110, gap: 260, land: 300 },
@@ -322,13 +322,13 @@ function skiJumpChain(): Plan {
   ];
   const baseY = c.y;
   for (const j of jumps) {
-    c.slope(1500, j.down)
+    c.slope(1200, j.down)
       .flat(250)
       .kick(Math.max(450, j.rise * 5), j.rise);
     c.gap(j.gap, 70).landing(1000, j.land - 70);
-    c.flat(800).climbTo(baseY, 7).flat(500);
+    c.flat(500).climbTo(baseY).flat(500);
   }
-  c.flat(900);
+  c.flat(600);
   const flatEnd = c.x;
   const level = builtInLevel({
     id: 'builtin-37',
@@ -345,9 +345,9 @@ function skiJumpChain(): Plan {
 function switchbackPeak(): Plan {
   const c = new Course('b38-', pt(-420, -600));
   const startY = c.y;
-  c.flat(900);
+  c.flat(600);
   for (let i = 1; i < 3; i++) {
-    c.slope(1500 + i * 150, 350 + i * 40).flat(300);
+    c.slope(1200 + i * 150, 350 + i * 40).flat(300);
     const up = 180 + i * 20;
     c.slope(Math.round(up * 8), -up).flat(150);
     c.slope(1300, 450 + i * 30).flat(250);
@@ -355,9 +355,9 @@ function switchbackPeak(): Plan {
       .gap(220 + i * 30, 80)
       .landing(850, 220)
       .flat(650);
-    c.climbTo(startY, 7).flat(500);
+    c.climbTo(startY).flat(500);
   }
-  c.slope(1800, 300).flat(1400);
+  c.slope(1800, 300).flat(700);
   const flatEnd = c.x;
   const level = builtInLevel({
     id: 'builtin-38',
@@ -374,19 +374,19 @@ function switchbackPeak(): Plan {
 function redlineRhythm(): Plan {
   const c = new Course('b39-', pt(-420, -900));
   const baseY = c.y;
-  c.flat(900);
+  c.flat(600);
   const rounds = [
     { drop: 600, n: 4, len: 500, w: 200, dy: 110 },
     { drop: 600, n: 4, len: 450, w: 260, dy: 140 },
     { drop: 600, n: 5, len: 400, w: 320, dy: 170 },
   ];
   for (const r of rounds) {
-    c.slope(2600, r.drop).flat(300);
+    c.slope(1900, r.drop).flat(300);
     c.rhythm(r.n, r.len, r.w, r.dy, false);
-    c.landing(900, 120).flat(1200);
+    c.landing(900, 120).flat(600);
     c.climbTo(c.y - 600).flat(400);
   }
-  c.flat(900);
+  c.flat(600);
   const flatEnd = c.x;
   const level = builtInLevel({
     id: 'builtin-39',
