@@ -99,8 +99,13 @@ export function worldOfLevel(levelId: string): World | undefined {
   return WORLDS.find((w) => w.levelIds.includes(levelId));
 }
 
-/** World 1 is always open; every later world opens when the previous world's finale is finished. */
+/**
+ * World 1 is always open; every later world opens when the previous world's finale is finished.
+ * `npm run dev` (mode "development") opens every world; `npm run dev:locked` and production builds
+ * keep the restriction.
+ */
 export function isWorldUnlocked(worldIndex: number, finished: ReadonlySet<string>): boolean {
+  if (import.meta.env.MODE === 'development') return true;
   if (worldIndex <= 0) return true;
   const previous = WORLDS[worldIndex - 1];
   if (!previous) return false;
